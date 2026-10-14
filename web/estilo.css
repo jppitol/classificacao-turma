@@ -1,0 +1,183 @@
+/* ---------- Cores (tema claro e escuro) ---------- */
+:root {
+  color-scheme: light dark;
+  --fundo: #f4f5f7;
+  --superficie: #ffffff;
+  --texto: #1b1f24;
+  --texto-suave: #5b6470;
+  --borda: #d8dce2;
+  --destaque: #1f5fbf;
+  --destaque-texto: #ffffff;
+  --destaque-suave: #e3ecfa;
+  --erro: #b42318;
+  --erro-fundo: #fdecea;
+  --sucesso: #1a7f37;
+  --sucesso-fundo: #e6f4ea;
+  --raio: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #121418;
+    --superficie: #1c1f25;
+    --texto: #e7e9ec;
+    --texto-suave: #9aa3ae;
+    --borda: #343943;
+    --destaque: #6ea2f0;
+    --destaque-texto: #0d1117;
+    --destaque-suave: #1e2a3d;
+    --erro: #ff8a80;
+    --erro-fundo: #3a1c1a;
+    --sucesso: #6fd38a;
+    --sucesso-fundo: #16301f;
+  }
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h1 { font-size: 1.4rem; margin: 0 0 1rem; }
+a { color: var(--destaque); }
+[hidden] { display: none !important; }
+
+/* ---------- Formulários e botões ---------- */
+label { display: block; margin-bottom: 0.9rem; font-weight: 500; }
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.7rem 0.8rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+input:focus { outline: 2px solid var(--destaque); outline-offset: 1px; }
+
+button { font: inherit; cursor: pointer; }
+
+.botao {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--destaque);
+  color: var(--destaque-texto);
+  font-weight: 600;
+}
+.botao:disabled { opacity: 0.6; cursor: wait; }
+
+.botao-link {
+  padding: 0.25rem 0.4rem;
+  border: none;
+  background: none;
+  color: var(--destaque);
+  text-decoration: underline;
+}
+
+.dica { font-size: 0.85rem; color: var(--texto-suave); margin: -0.5rem 0 0.9rem; }
+
+.mensagem { padding: 0.7rem 0.9rem; border-radius: 8px; margin-bottom: 1rem; }
+.mensagem.erro    { background: var(--erro-fundo);    color: var(--erro); }
+.mensagem.sucesso { background: var(--sucesso-fundo); color: var(--sucesso); }
+
+/* ---------- Página de login ---------- */
+.login {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 2rem 16px;
+}
+.login .titulo { text-align: center; margin-bottom: 1.5rem; }
+.login .titulo p { margin: 0; color: var(--texto-suave); }
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1.25rem;
+}
+
+.abas {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--borda);
+}
+.abas button {
+  flex: 1;
+  padding: 0.6rem 0.25rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+.abas button[aria-selected="true"] {
+  color: var(--destaque);
+  border-bottom-color: var(--destaque);
+  font-weight: 600;
+}
+
+/* ---------- Topo com navegação (páginas logadas) ---------- */
+.topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+}
+.topo-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 16px 0.2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.marca { font-weight: 700; color: var(--texto); text-decoration: none; }
+.usuario { font-size: 0.9rem; color: var(--texto-suave); white-space: nowrap; }
+.usuario strong { color: var(--texto); }
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;              /* no celular, rola para o lado */
+  padding: 0 12px;
+  max-width: 960px;
+  margin: 0 auto;
+  scrollbar-width: none;
+}
+.nav a {
+  flex: none;
+  padding: 0.6rem 0.7rem;
+  color: var(--texto-suave);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  font-size: 0.95rem;
+}
+.nav a[aria-current="page"] {
+  color: var(--destaque);
+  border-bottom-color: var(--destaque);
+  font-weight: 600;
+}
+
+.pagina {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.25rem 16px 3rem;
+}
+
+.vazio { color: var(--texto-suave); }
+.carregando { padding: 2rem 16px; text-align: center; color: var(--texto-suave); }

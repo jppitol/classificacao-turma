@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Turma XXX</title>
+  <link rel="stylesheet" href="estilo.css">
+  <script type="module" src="index.js"></script>
+</head>
+<body>
+  <main class="login">
+    <div class="titulo">
+      <h1>Classificação da Turma XXX</h1>
+      <p>IME</p>
+    </div>
+
+    <div class="cartao">
+      <div class="abas" id="abas" role="tablist">
+        <button type="button" role="tab" data-aba="entrar" aria-selected="true">Entrar</button>
+        <button type="button" role="tab" data-aba="criar" aria-selected="false">Criar conta</button>
+        <button type="button" role="tab" data-aba="esqueci" aria-selected="false">Esqueci a senha</button>
+      </div>
+
+      <div id="mensagem" class="mensagem" role="status" hidden></div>
+
+      <form data-painel="entrar" id="form-entrar">
+        <label>Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <label>Senha
+          <input type="password" name="senha" autocomplete="current-password" required>
+        </label>
+        <button class="botao" type="submit">Entrar</button>
+      </form>
+
+      <form data-painel="criar" id="form-criar" hidden>
+        <label>Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <p class="dica">Use o email que está na lista da turma.</p>
+        <label>Senha
+          <input type="password" name="senha" autocomplete="new-password" minlength="6" required>
+        </label>
+        <label>Repita a senha
+          <input type="password" name="confirmar" autocomplete="new-password" minlength="6" required>
+        </label>
+        <button class="botao" type="submit">Criar conta</button>
+      </form>
+
+      <form data-painel="esqueci" id="form-esqueci" hidden>
+        <p class="dica" style="margin-top:0">Vamos mandar um link para você criar uma senha nova.</p>
+        <label>Email
+          <input type="email" name="email" autocomplete="email" required>
+        </label>
+        <button class="botao" type="submit">Enviar link</button>
+      </form>
+
+      <!-- Aparece só quando a pessoa chega pelo link de "esqueci a senha" -->
+      <form data-painel="nova-senha" id="form-nova-senha" hidden>
+        <h2 style="font-size:1.1rem;margin-top:0">Escolha uma senha nova</h2>
+        <label>Nova senha
+          <input type="password" name="senha" autocomplete="new-password" minlength="6" required>
+        </label>
+        <label>Repita a nova senha
+          <input type="password" name="confirmar" autocomplete="new-password" minlength="6" required>
+        </label>
+        <button class="botao" type="submit">Salvar senha</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
