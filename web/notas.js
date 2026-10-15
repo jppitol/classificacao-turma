@@ -1,24 +1,12 @@
 // Página "Minhas notas": lançar, corrigir e apagar as próprias notas.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
+import { esc, formatar } from './formato.js';
 
 // ---------- Formatação ----------
 
 // Nome das abas: ano.semestre (o 3º semestre é o 1º semestre do 2º ano)
 const ROTULO_SEMESTRE = { 1: '1.1', 2: '1.2', 3: '2.1', 4: '2.2' };
-
-// Escapa texto vindo do banco antes de pôr no HTML
-function esc(texto) {
-  const div = document.createElement('div');
-  div.textContent = texto;
-  return div.innerHTML;
-}
-
-// 7.5 -> "7,50"; null -> "-"
-function formatar(numero) {
-  if (numero == null) return '-';
-  return Number(numero).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 // Valor guardado no campo: 7.5 -> "7,5" (sem zeros sobrando)
 function formatarCampo(numero) {
@@ -177,14 +165,14 @@ async function atualizarMedias() {
   const porDisciplina = new Map(desempenho.data.map((d) => [String(d.disciplina_id), d]));
   for (const card of document.querySelectorAll('[data-disciplina]')) {
     const d = porDisciplina.get(card.dataset.disciplina);
-    card.querySelector('[data-minha-media]').textContent = formatar(d?.minha_media);
-    card.querySelector('[data-media-turma]').textContent = formatar(d?.media_turma);
+    card.querySelector('[data-minha-media]').textContent = formatar(d?.minha_media, 2, 4);
+    card.querySelector('[data-media-turma]').textContent = formatar(d?.media_turma, 2, 4);
     card.querySelector('.previa').hidden = true;
   }
 
   const porAvaliacao = new Map(estatisticas.data.map((e) => [String(e.avaliacao_id), e]));
   for (const campo of document.querySelectorAll('[data-turma-avaliacao]')) {
-    campo.textContent = formatar(porAvaliacao.get(campo.dataset.turmaAvaliacao)?.media);
+    campo.textContent = formatar(porAvaliacao.get(campo.dataset.turmaAvaliacao)?.media, 2, 4);
   }
 }
 
@@ -200,7 +188,7 @@ function mostrarPrevia(campoDigitado) {
     soma += Number(campo.dataset.peso) * valor;
     somaPesos += Number(campo.dataset.peso);
   }
-  card.querySelector('[data-minha-media]').textContent = somaPesos > 0 ? formatar(soma / somaPesos) : '-';
+  card.querySelector('[data-minha-media]').textContent = somaPesos > 0 ? formatar(soma / somaPesos, 2, 4) : '-';
   card.querySelector('.previa').hidden = false;
 }
 

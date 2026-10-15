@@ -32,7 +32,7 @@ export async function iniciarPagina() {
   // O RLS só deixa ver a própria linha, então não precisa de filtro
   const { data: aluno, error } = await supabase
     .from('alunos')
-    .select('id, nome_guerra, segmento, ocultar_no_ranking')
+    .select('id, nome_guerra, segmento')
     .maybeSingle();
 
   desenharTopo(aluno?.nome_guerra ?? session.user.email);

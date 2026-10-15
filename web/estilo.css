@@ -252,3 +252,67 @@ button { font: inherit; cursor: pointer; }
 }
 .apagar:hover { color: var(--erro); border-color: var(--erro); }
 .invisivel { visibility: hidden; }
+
+/* ---------- Ranking ---------- */
+.aviso {
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: var(--destaque-suave);
+  font-size: 0.9rem;
+}
+
+.cartao-titulo { font-size: 1rem; margin: 0 0 0.5rem; }
+
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tabela-medias { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabela-medias th, .tabela-medias td { padding: 0.3rem 0.25rem; }
+.tabela-medias thead th { color: var(--texto-suave); font-weight: 500; }
+.tabela-medias tbody th { text-align: left; font-weight: 500; }
+.tabela-medias tbody tr + tr { border-top: 1px solid var(--borda); }
+
+.ranking-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.botao-secundario {
+  flex: none;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--destaque);
+  border-radius: 8px;
+  background: none;
+  color: var(--destaque);
+  font-weight: 600;
+}
+
+/* se a tabela não couber na tela do celular, ela rola para o lado sozinha */
+.tabela-rolagem {
+  overflow-x: auto;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.tabela-ranking { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.tabela-ranking th, .tabela-ranking td { padding: 0.55rem 0.5rem; vertical-align: top; }
+.tabela-ranking thead th {
+  text-align: left;
+  color: var(--texto-suave);
+  font-weight: 500;
+  border-bottom: 1px solid var(--borda);
+}
+.tabela-ranking thead th.num { text-align: right; }
+.tabela-ranking tbody tr + tr { border-top: 1px solid var(--borda); }
+.tabela-ranking .ncf { font-weight: 600; }
+
+.tabela-ranking tr.eu { background: var(--destaque-suave); font-weight: 600; }
+.tabela-ranking tr.eu td:first-child { box-shadow: inset 4px 0 0 var(--destaque); }
+.tabela-ranking tr.eu:focus { outline: none; }
+.piscar { animation: piscar 1.2s ease-out; }
+@keyframes piscar { 0%, 40% { background: var(--destaque); color: var(--destaque-texto); } }
+
+.pendencia { display: block; font-size: 0.75rem; font-weight: 400; color: var(--texto-suave); }

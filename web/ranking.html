@@ -11,7 +11,32 @@
   <p class="carregando" id="carregando">Carregando...</p>
   <main class="pagina" id="conteudo" hidden>
     <h1>Ranking</h1>
-    <p class="vazio">Em construção.</p>
+    <div class="abas" id="abas-segmento" role="tablist">
+      <button type="button" role="tab" data-segmento="ativa">Ativa</button>
+      <button type="button" role="tab" data-segmento="reserva">Reserva</button>
+    </div>
+
+    <div id="aviso-pendencias" class="aviso" hidden></div>
+    <div class="cartao" id="medias-turma"></div>
+
+    <div class="ranking-barra">
+      <span class="dica" style="margin:0">Médias com as notas lançadas até agora.</span>
+      <button type="button" class="botao-secundario" id="ir-para-mim" hidden>Ir para mim</button>
+    </div>
+    <div class="tabela-rolagem">
+      <table class="tabela-ranking">
+        <thead>
+          <tr>
+            <th class="num">Pos.</th>
+            <th>Nome de guerra</th>
+            <th class="num">Grad.</th>
+            <th class="num">Mil.</th>
+            <th class="num">NCF</th>
+          </tr>
+        </thead>
+        <tbody id="linhas-ranking"></tbody>
+      </table>
+    </div>
   </main>
 </body>
 </html>

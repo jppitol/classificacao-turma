@@ -36,7 +36,7 @@ O usuário logado só enxerga os próprios dados nas tabelas; tudo que envolve a
 ### Tabelas (leitura com `supabase.from(...)`)
 | tabela | colunas | acesso |
 |---|---|---|
-| `alunos` | id, turma_id, nome_guerra, segmento ('ativa'/'reserva'), email, user_id, ocultar_no_ranking | só a própria linha; pode dar update **apenas** em `ocultar_no_ranking` |
+| `alunos` | id, turma_id, nome_guerra, segmento ('ativa'/'reserva'), email, user_id | só a própria linha, somente leitura |
 | `semestres` | id, turma_id, numero (1 a 4), peso | leitura |
 | `disciplinas` | id, semestre_id, nome, componente ('graduacao'/'militar'), peso, ordem | leitura |
 | `avaliacoes` | id, disciplina_id, nome, peso, ordem | leitura |
@@ -53,11 +53,11 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 ### RPCs (`supabase.rpc('nome')`, sem parâmetros salvo indicado)
 | função | retorna (uma linha por) |
 |---|---|
-| `ranking` | aluno da turma: posicao, nome (null se a pessoa ocultou), segmento, media_graduacao, media_militar, ncf, pendencias, sou_eu |
+| `ranking` | aluno da turma: posicao, nome, segmento, media_graduacao, media_militar, ncf, pendencias, sou_eu |
 | `medias_turma` | segmento ('ativa', 'reserva' e null = turma toda): alunos, media_graduacao, media_militar, media_ncf |
 | `meu_desempenho` | disciplina com nota minha: semestre, disciplina_id, disciplina, componente, minha_media, media_turma, diferenca, minha_posicao, alunos_com_nota |
 | `estatisticas_avaliacoes` | avaliação com alguma nota na turma: avaliacao_id, minha_nota, media, desvio, minima, maxima, alunos, minha_posicao |
-| `distribuicao` | aluno: segmento, ordem_classificacao, nome (null se oculto), engenharia (null = sem vaga nas opções), opcao, sou_eu |
+| `distribuicao` | aluno: segmento, ordem_classificacao, nome, engenharia (null = sem vaga nas opções), opcao, sou_eu |
 | `resumo_engenharias` | (segmento, engenharia): vagas, ocupadas, ncf_corte (NCF do último que entrou) |
 | `minha_engenharia` | minha opção, em ordem: opcao, engenharia, situacao ('na vaga' / 'espera' / 'abaixo'), posicao_espera, ncf_corte, meu_ncf, falta |
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
@@ -86,7 +86,7 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 5. **Engenharias:** editar a lista de 10 preferências (botões subir/descer, funciona no celular);
    "minha situação" (em qual entro hoje, em qual fila de espera estou e quanto falta de NCF);
    tabela de vagas e notas de corte; distribuição completa.
-6. **Perfil:** nome de guerra, segmento, opção "ocultar meu nome no ranking", sair.
+6. **Perfil:** nome de guerra, segmento, sair. (Não existe opção de ocultar o nome: o ranking mostra todos, como na planilha.)
 
 ## Estrutura sugerida de `web/`
 ```

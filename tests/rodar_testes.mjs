@@ -1,7 +1,7 @@
 // Testes do banco num Postgres local (PGlite): números x planilha e regras de segurança.
 // Uso: cd tests && npm install && node rodar_testes.mjs
 import { PGlite } from '@electric-sql/pglite';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 
 const sql = (f) => readFileSync(new URL(f, import.meta.url), 'utf8');
 const esperado = JSON.parse(sql('./esperado.json'));
@@ -15,6 +15,9 @@ async function novoBanco({ importar = true } = {}) {
   await db.exec(sql('../supabase/01_schema.sql'));
   await db.exec(sql('../supabase/02_seed.sql'));
   if (importar) await db.exec(sql('../supabase/03_importar_planilha.sql'));
+  // mudanças posteriores (05_*.sql em diante), na ordem do nome, como no Supabase
+  for (const f of readdirSync(new URL('../supabase/', import.meta.url)).filter((f) => /^(0[5-9]|[1-9]\d)_.*\.sql$/.test(f)).sort())
+    await db.exec(sql(`../supabase/${f}`));
   return db;
 }
 // Executa como um usuário logado do site (papel authenticated + uid do JWT)
@@ -101,8 +104,7 @@ console.log('4. Segurança: cadastro, RLS e funções');
 {
   const db = await novoBanco();
   await db.exec(`update alunos set email = 'boeira@ime.eb.br' where nome_guerra = 'BOEIRA';
-                 update alunos set email = 'pitol@ime.eb.br'  where nome_guerra = 'PITOL';
-                 update alunos set ocultar_no_ranking = true where nome_guerra = 'PITOL';`);
+                 update alunos set email = 'pitol@ime.eb.br'  where nome_guerra = 'PITOL';`);
   // hook de cadastro
   const hook = async (email) => {   // roda como o serviço de Auth, igual no Supabase
     await db.exec('set role supabase_auth_admin');
@@ -130,22 +132,21 @@ console.log('4. Segurança: cadastro, RLS e funções');
     await db.query(`delete from notas where aluno_id = $1`, [idPitol]);
     check(/row-level security/.test(await erro(db.query(`insert into notas values ($1, $2, 10)`, [idPitol, avalId])) ?? ''), 'não lança nota para outro aluno');
     check(/permission denied/.test(await erro(db.query(`update alunos set email = 'x@x' where id = $1`, [idBoeira])) ?? ''), 'não muda o próprio email');
-    await db.query(`update alunos set ocultar_no_ranking = true where id = $1`, [idBoeira]);
-    await db.query(`update alunos set ocultar_no_ranking = false where id = $1`, [idBoeira]);
+    check(/permission denied/.test(await erro(db.query(`update alunos set nome_guerra = 'X' where id = $1`, [idBoeira])) ?? ''), 'não edita o próprio cadastro');
     check(/permission denied/.test(await erro(db.query(`select * from privado.classificacao`)) ?? ''), 'não lê o schema privado direto');
     await db.query(`insert into notas values ($1, $2, 9.5) on conflict (aluno_id, avaliacao_id) do update set valor = excluded.valor`, [idBoeira, avalId]);
     check(/check constraint/.test(await erro(db.query(`update notas set valor = 11 where aluno_id = $1 and avaliacao_id = $2`, [idBoeira, avalId])) ?? ''), 'nota > 10 rejeitada');
     const rk = await db.query(`select * from ranking()`);
     check(rk.rows.length === 93, 'ranking com a turma toda');
     check(rk.rows.filter(x => x.sou_eu).length === 1, 'ranking marca "sou eu"');
-    check(rk.rows.some(x => x.nome === null) && !rk.rows.some(x => x.nome === 'PITOL'), 'quem ocultou aparece sem nome');
+    check(rk.rows.every(x => x.nome != null) && rk.rows.some(x => x.nome === 'PITOL'), 'ranking mostra o nome de todos');
     const md = await db.query(`select * from medias_turma()`);
     check(md.rows.length === 3, 'médias: ativa, reserva e geral');
     const de = await db.query(`select * from meu_desempenho()`);
     check(de.rows.length > 0 && de.rows.every(x => x.minha_media != null), 'feedback por disciplina');
     const es = await db.query(`select * from estatisticas_avaliacoes()`);
     check(es.rows.some(x => x.minha_nota != null), 'estatísticas por avaliação');
-    await db.query(`select * from distribuicao()`);
+    check((await db.query(`select * from distribuicao()`)).rows.every(x => x.nome != null), 'distribuição mostra o nome de todos');
     await db.query(`select salvar_preferencias($1)`, [['COMP','ELO','TEL']]);
     const pf = await db.query(`select engenharia from preferencias order by ordem`);
     check(pf.rows.map(x => x.engenharia).join() === 'COMP,ELO,TEL', 'salvar_preferencias grava na ordem');
@@ -155,7 +156,6 @@ console.log('4. Segurança: cadastro, RLS e funções');
   });
   const depois = Number((await db.query(`select count(*) from notas`)).rows[0].count);
   check(depois === total, `notas de outros intactas (${depois} = ${total})`);
-  check((await db.query(`select ocultar_no_ranking from alunos where nome_guerra='PITOL'`)).rows[0].ocultar_no_ranking === true, 'PITOL não foi alterado');
 
   // visitante sem login (anon) e usuário logado que não está na lista
   await db.exec(`set role anon`);
@@ -168,10 +168,18 @@ console.log('4. Segurança: cadastro, RLS e funções');
     check((await db.query(`select * from ranking()`)).rows.length === 0, 'logado fora da lista não vê ranking');
     check((await db.query(`select * from notas`)).rows.length === 0, 'logado fora da lista não vê notas');
   });
-  // como o PITOL (oculto), ele vê o próprio nome
-  await comoUsuario(db, u2, async () => {
-    check((await db.query(`select * from ranking() where sou_eu`)).rows[0].nome === 'PITOL', 'oculto vê o próprio nome');
-  });
+}
+
+// ---------------------------------------------------------------- 05
+console.log('05. Ordem das avaliações: VE 1, VC, VE 2, VF');
+{
+  const db = await novoBanco({ importar: false });
+  const r = await db.query(`select string_agg(nome, ',' order by ordem) as lista,
+                                   count(*) = count(distinct ordem) as sem_empate
+                            from avaliacoes group by disciplina_id`);
+  const quatro = r.rows.filter((x) => ['VE 1', 'VE 2', 'VC', 'VF'].every((n) => x.lista.split(',').includes(n)) && x.lista.split(',').length === 4);
+  check(quatro.length > 0 && quatro.every((x) => x.lista === 'VE 1,VC,VE 2,VF'), 'VC vem antes da VE 2 nas disciplinas com VE 1, VE 2, VC e VF');
+  check(r.rows.every((x) => x.sem_empate), 'nenhuma disciplina tem duas avaliações na mesma posição');
 }
 
 console.log(`\n${ok} verificações ok, ${falhas} falhas`);

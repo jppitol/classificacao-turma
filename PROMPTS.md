@@ -43,8 +43,7 @@ Teste: confira tuas médias do 1º semestre contra a planilha (têm que ser igua
 ### Etapa 5: engenharias e perfil
 > Faça as páginas "Engenharias" e "Perfil" conforme o CLAUDE.md.
 
-Teste: troque a ordem das preferências e veja a "minha situação" mudar. Marque "ocultar" no perfil e
-confira, com outra conta, que teu nome some do ranking.
+Teste: troque a ordem das preferências e veja a "minha situação" mudar.
 
 ### Etapa 6: revisão de segurança e publicação
 > Revise o projeto inteiro procurando: chave secreta no código, dado real que poderia ir pro git,
