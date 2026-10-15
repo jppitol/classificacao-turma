@@ -316,3 +316,52 @@ button { font: inherit; cursor: pointer; }
 @keyframes piscar { 0%, 40% { background: var(--destaque); color: var(--destaque-texto); } }
 
 .pendencia { display: block; font-size: 0.75rem; font-weight: 400; color: var(--texto-suave); }
+
+/* ---------- Meu desempenho ---------- */
+.resumo { margin-bottom: 0.75rem; }
+.resumo-contagem { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.resumo-linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  border-top: 1px solid var(--borda);
+  font-size: 0.9rem;
+}
+.nota-explicativa { margin: 0 0 0.5rem; }
+
+.acima  { color: var(--sucesso); }
+.abaixo { color: var(--erro); }
+.neutro { color: var(--texto-suave); }
+
+.desempenho { padding: 0; }
+.disc-botao {
+  display: block;
+  width: 100%;
+  padding: 0.9rem 1rem;
+  border: none;
+  border-radius: var(--raio);
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+.disc-titulo { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4rem; }
+.disc-nome { font-weight: 600; }
+.seta { margin-left: auto; color: var(--texto-suave); transition: transform 0.15s; }
+.disc-botao[aria-expanded="true"] .seta { transform: rotate(180deg); }
+.disc-numeros { display: block; font-size: 0.85rem; color: var(--texto-suave); }
+
+/* barra divergente: metade esquerda = abaixo da turma, metade direita = acima; linha no meio = zero */
+.barra-dif { display: flex; margin: 0.5rem 0 0.35rem; height: 1.6rem; }
+.lado-esq, .lado-dir { flex: 1; display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
+.lado-esq { justify-content: flex-end; border-right: 2px solid var(--texto-suave); }
+.barra { display: block; height: 0.9rem; min-width: 2px; flex: 0 1 auto; border-radius: 3px; background: currentColor; }
+.lado-esq .barra { border-radius: 3px 0 0 3px; }
+.lado-dir .barra { border-radius: 0 3px 3px 0; }
+.rotulo-dif { flex: none; font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.detalhe { padding: 0 1rem 0.6rem; }
+.aval-linha { padding: 0.5rem 0; border-top: 1px solid var(--borda); }
+.aval-topo { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.aval-turma { font-size: 0.8rem; color: var(--texto-suave); }
+.nao-lancada { font-size: 0.85rem; font-style: italic; color: var(--texto-suave); }

@@ -1,12 +1,9 @@
 // Página "Minhas notas": lançar, corrigir e apagar as próprias notas.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE } from './formato.js';
 
 // ---------- Formatação ----------
-
-// Nome das abas: ano.semestre (o 3º semestre é o 1º semestre do 2º ano)
-const ROTULO_SEMESTRE = { 1: '1.1', 2: '1.2', 3: '2.1', 4: '2.2' };
 
 // Valor guardado no campo: 7.5 -> "7,5" (sem zeros sobrando)
 function formatarCampo(numero) {

@@ -1,5 +1,8 @@
 // Funções de formatação usadas por várias páginas.
 
+// Nome das abas de semestre: ano.semestre (o 3º semestre é o 1º semestre do 2º ano)
+export const ROTULO_SEMESTRE = { 1: '1.1', 2: '1.2', 3: '2.1', 4: '2.2' };
+
 // Escapa texto vindo do banco antes de pôr no HTML
 export function esc(texto) {
   const div = document.createElement('div');
