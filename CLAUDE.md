@@ -63,7 +63,10 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
 
 `pendencias` = quantas avaliações já feitas pela turma o aluno ainda não lançou. Mostrar como aviso
-("faltam 3 notas") porque o NCF parcial dele usa só o que foi lançado.
+("faltam 3 notas") porque nota não lançada conta como zero no NCF.
+
+NCF igual ao da planilha: MG e MM dividem pelo peso de **todas** as avaliações do curso, então o que
+ainda não aconteceu conta como zero (supabase/07_ncf_como_planilha.sql).
 
 ### Cadastro e login (Supabase Auth, email + senha)
 - Só emails presentes em `alunos.email` conseguem criar conta (hook no banco). Mensagem de erro do

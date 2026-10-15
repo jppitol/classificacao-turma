@@ -179,7 +179,7 @@ Tudo igual à planilha, tirado das fórmulas dela:
 - **MG e MM** = média dos 4 semestres (0,25 cada).
 - **NCF** = `0,8·MG + 0,2·MM` na ativa e `0,9·MG + 0,1·MM` na reserva. Ranking separado por segmento.
 - **Engenharias:** na ordem da classificação, cada aluno fica com a primeira opção que ainda tem vaga (igual à aba Preferências).
-- **Semestre em andamento:** avaliação sem nota simplesmente não entra. Cada avaliação pesa o que pesaria no NCF final, e a média é feita só sobre o que já foi lançado (mesma ideia das colunas "relativo" da planilha). Quando tudo estiver lançado, dá exatamente a fórmula oficial.
+- **Semestre em andamento:** igual à planilha, avaliação sem nota conta como zero (MG e MM dividem pelo peso de todas as avaliações do curso). Por isso o NCF sobe ao longo do curso. A média de cada disciplina, na página Minhas notas, usa só as avaliações já lançadas.
 
 Os pesos ficam nas tabelas `semestres`, `disciplinas`, `avaliacoes`, `pesos_ncf` e `vagas`. Para mudar algo (ex.: vagas do ano), edite em **Table Editor** que o site recalcula sozinho.
 

@@ -32,7 +32,7 @@ if (!existsSync(new URL('../supabase/03_importar_planilha.sql', import.meta.url)
 }
 
 // ---------------------------------------------------------------- 1
-console.log('1. NCF parcial atual (todas as notas) = recálculo independente em Python');
+console.log('1. NCF atual (nota que falta = zero) = recálculo independente em Python');
 {
   const db = await novoBanco();
   const r = await db.query(`select a.nome_guerra, c.* from privado.classificacao c join alunos a on a.id = c.aluno_id`);
@@ -47,13 +47,26 @@ console.log('1. NCF parcial atual (todas as notas) = recálculo independente em 
     }
   }
   console.log(`   ${r.rows.length} alunos, erro máximo ${maxErr.toExponential(2)}`);
+  // NCF = o que a planilha mostra na aba Classificação OFICIAL
+  // (exceto onde a planilha está errada ou incompleta: ver nomes abaixo)
+  const excecoes = {
+    SZPIGEL: 'Cálculo I do 1º semestre usa G57 (VE 1 do aluno de cima)',
+    BUDZIAK: '1º semestre digitado à mão na OFICIAL, sem notas na aba do semestre',
+  };
+  let iguaisPlanilha = 0;
+  for (const x of r.rows) {
+    const p = esperado.ncf_planilha[x.nome_guerra];
+    if (p == null || excecoes[x.nome_guerra]) continue;
+    if (perto(x.ncf, p, 1e-9)) iguaisPlanilha++; else check(false, `${x.nome_guerra}: NCF ${x.ncf} x planilha ${p}`);
+  }
+  console.log(`   NCF igual ao da planilha em ${iguaisPlanilha} alunos (fora ${Object.keys(excecoes).join(', ')})`);
   // posição: rank dentro do segmento
   const pos = await db.query(`select segmento, count(*) n, count(distinct posicao) d, max(posicao) m from privado.classificacao group by 1`);
   for (const p of pos.rows) check(Number(p.m) === Number(p.n), `ranking ${p.segmento} vai de 1 a ${p.n}`);
 }
 
 // ---------------------------------------------------------------- 2
-console.log('2. Só o 1º semestre: MG e MM = colunas AK e AR da planilha');
+console.log('2. Só o 1º semestre: MG e MM = 0,25 x colunas AK e AR da planilha (resto conta zero)');
 {
   const db = await novoBanco();
   await db.exec(`delete from notas n using avaliacoes a, disciplinas d, semestres s
@@ -64,8 +77,8 @@ console.log('2. Só o 1º semestre: MG e MM = colunas AK e AR da planilha');
     const e = esperado.sem1[x.nome_guerra];
     if (!e || x.nome_guerra === 'SZPIGEL') continue;   // SZPIGEL: a planilha tem erro de referência (G57)
     n++;
-    maxErr = Math.max(maxErr, Math.abs(x.mg - e.mg), Math.abs(x.mm - e.mm));
-    check(perto(x.mg, e.mg, 1e-7) && perto(x.mm, e.mm, 1e-7), `${x.nome_guerra}: ${x.mg}/${x.mm} x ${e.mg}/${e.mm}`);
+    maxErr = Math.max(maxErr, Math.abs(x.mg - 0.25 * e.mg), Math.abs(x.mm - 0.25 * e.mm));
+    check(perto(x.mg, 0.25 * e.mg, 1e-7) && perto(x.mm, 0.25 * e.mm, 1e-7), `${x.nome_guerra}: ${x.mg}/${x.mm} x 0,25*${e.mg}/0,25*${e.mm}`);
   }
   console.log(`   ${n} alunos conferidos, erro máximo ${maxErr.toExponential(2)}`);
 }

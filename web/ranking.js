@@ -87,13 +87,13 @@ function desenharMedias(segmento) {
     </table>`;
 }
 
-// Aviso em cima se EU tenho notas faltando (meu NCF parcial usa só o que lancei)
+// Aviso em cima se EU tenho notas faltando (nota não lançada conta como zero no NCF)
 function mostrarAvisoPendencias() {
   const eu = ranking.find((r) => r.sou_eu);
   if (!eu || eu.pendencias === 0) return;
   const aviso = document.getElementById('aviso-pendencias');
   const texto = eu.pendencias === 1 ? 'Falta 1 nota sua' : `Faltam ${eu.pendencias} notas suas`;
-  aviso.innerHTML = `${texto} em avaliações que a turma já fez. Seu NCF usa só o que você lançou. <a href="notas.html">Lançar notas</a>`;
+  aviso.innerHTML = `${texto} em avaliações que a turma já fez. Enquanto não lançar, elas contam como zero no seu NCF. <a href="notas.html">Lançar notas</a>`;
   aviso.hidden = false;
 }
 

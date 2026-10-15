@@ -27,7 +27,8 @@ for nome, r in L1.items():
     if all(isinstance(ws1.cell(r, ci(c)).value,(int,float)) and ws1.cell(r, ci(c)).value > 0 for c in cols):
         sem1[nome] = {"mg": ws1[f"AK{r}"].value, "mm": ws1[f"AR{r}"].value}
 
-# 2) NCF parcial atual, recalculado em Python com a mesma regra (só notas lançadas)
+# 2) NCF atual, recalculado em Python com a regra da planilha: avaliação sem nota conta como zero
+#    (divide pelo peso de TODAS as avaliações do curso, não só das lançadas)
 W = {}  # (sem, comp) -> [(w, col)]
 for n, cfg in SEMESTRES.items():
     for comp in ("graduacao","militar"):
@@ -40,19 +41,19 @@ parcial = {}
 L = {n: (wb[cfg["aba"]], linhas(wb[cfg["aba"]])) for n, cfg in SEMESTRES.items()}
 for nome, sg in alunos.items():
     res = {}
+    lancadas = 0
     for comp in ("graduacao","militar"):
-        num = den = 0
+        num = 0
         for n, w, c in W[comp]:
             ws, Ln = L[n]
             if nome not in Ln or w == 0: continue
             v = ws.cell(Ln[nome], ci(c)).value
-            if isinstance(v,(int,float)) and 0 < v <= 10: num += w*v; den += w
-        res[comp] = num/den if den else None
+            if isinstance(v,(int,float)) and 0 < v <= 10: num += w*v; lancadas += 1
+        res[comp] = num / sum(w for _, w, _ in W[comp])
     pg, pm = PESOS_NCF[sg]
+    if lancadas == 0: res = {"graduacao": None, "militar": None}
     g, m = res["graduacao"], res["militar"]
-    num = (pg*g if g is not None else 0) + (pm*m if m is not None else 0)
-    den = (pg if g is not None else 0) + (pm if m is not None else 0)
-    ncf = num/den if den else None
+    ncf = pg*g + pm*m if lancadas else None
     parcial[nome] = {"segmento": sg, "mg": res["graduacao"], "mm": res["militar"], "ncf": ncf}
 
 # 3) Distribuição da planilha (com o NCF que ela usou) para testar o algoritmo

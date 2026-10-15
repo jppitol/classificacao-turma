@@ -32,9 +32,8 @@ digite 7,5 com vírgula. Confira no Supabase em Table Editor > notas.
 ### Etapa 3: ranking e médias
 > Faça a página "Ranking" conforme o CLAUDE.md.
 
-Teste: confira tuas médias do 1º semestre contra a planilha (têm que ser iguais). O ranking atual
-é diferente do da planilha de propósito: a planilha conta como zero tudo que ainda não aconteceu no 2º semestre
-(ver "Como o cálculo funciona" no README).
+Teste: confira teu NCF e tua posição contra a aba "Classificação OFICIAL" da planilha (têm que ser iguais,
+salvo onde a planilha tem erro: ver tests/rodar_testes.mjs).
 
 ### Etapa 4: meu desempenho
 > Faça a página "Meu desempenho" com os gráficos de minha média x média da turma por disciplina.
