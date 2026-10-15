@@ -1,0 +1,3 @@
+{ "name": "testes-classificacao", "private": true, "type": "module",
+  "scripts": { "test": "node rodar_testes.mjs" },
+  "devDependencies": { "@electric-sql/pglite": "0.2.17" } }

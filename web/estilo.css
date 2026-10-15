@@ -181,3 +181,74 @@ button { font: inherit; cursor: pointer; }
 
 .vazio { color: var(--texto-suave); }
 .carregando { padding: 2rem 16px; text-align: center; color: var(--texto-suave); }
+
+/* ---------- Minhas notas ---------- */
+.componente { font-size: 1.05rem; margin: 1.5rem 0 0.75rem; color: var(--texto-suave); }
+
+.disciplina {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1rem;
+  margin-bottom: 0.9rem;
+}
+.disciplina-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.disciplina-topo h3 { font-size: 1rem; margin: 0; }
+.disciplina-medias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0.4rem 0 0.6rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+.disciplina-medias strong { color: var(--texto); }
+.previa { color: var(--destaque); font-style: italic; }
+
+.etiqueta {
+  display: inline-block;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--destaque-suave);
+  color: var(--destaque);
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* nome à esquerda, campo à direita; média da turma e "salvo" embaixo */
+.avaliacao {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem 2.5rem;
+  align-items: center;
+  gap: 0.15rem 0.75rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--borda);
+}
+.avaliacao label { margin: 0; font-weight: 500; }
+.avaliacao input { margin: 0; text-align: center; padding: 0.55rem 0.4rem; }
+.avaliacao input[aria-invalid="true"] { border-color: var(--erro); outline-color: var(--erro); }
+.avaliacao-info {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+.status.sucesso { color: var(--sucesso); }
+.status.erro    { color: var(--erro); }
+
+/* botão "×" para deixar a avaliação em branco */
+.apagar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: none;
+  color: var(--texto-suave);
+  font-size: 1.3rem;
+  line-height: 1;
+}
+.apagar:hover { color: var(--erro); border-color: var(--erro); }
+.invisivel { visibility: hidden; }

@@ -1,0 +1,11 @@
+# Dados reais da turma: NUNCA versionar (o repositório do GitHub Pages é público)
+*.xlsx
+*.csv
+supabase/03_importar_planilha.sql
+supabase/04_emails.sql
+tests/esperado.json
+
+node_modules/
+__pycache__/
+.DS_Store
+.env
