@@ -5,8 +5,8 @@ import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
 import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO } from './formato.js';
 
-const NOTA_EXPLICATIVA = `<p class="dica nota-explicativa">A média de cada disciplina aqui usa só as avaliações
-  já lançadas. O NCF do ranking é diferente: conta zero no que ainda falta.</p>`;
+const NOTA_EXPLICATIVA = `<p class="dica nota-explicativa">Como na planilha, a média de cada disciplina conta zero
+  nas avaliações que a turma já fez e você não lançou. As que ninguém fez ainda ficam de fora.</p>`;
 const NAO_CONTA = '<span class="etiqueta">não conta na média</span>';
 
 // ---------- Formatação ----------

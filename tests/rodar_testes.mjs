@@ -285,8 +285,13 @@ console.log('10. Comparação com o meu segmento (meu_desempenho e estatisticas_
     await db.query(`update alunos set user_id = $1 where id = $2`, [uid, aluno]);
     // conta independente, direto nas tabelas: média da disciplina = soma(peso*nota)/soma(peso)
     const esperadoDisc = new Map((await db.query(`
-      with md as (select n.aluno_id, a.disciplina_id, sum(a.peso * n.valor) / nullif(sum(a.peso), 0) as m
-                  from notas n join avaliacoes a on a.id = n.avaliacao_id group by 1, 2)
+      with md as (  -- regra do 11: avaliação que alguém já fez e o aluno não lançou conta zero
+        select c.aluno_id, a.disciplina_id, sum(a.peso * coalesce(n.valor, 0)) / nullif(sum(a.peso), 0) as m
+        from (select distinct n.aluno_id, av.disciplina_id from notas n join avaliacoes av on av.id = n.avaliacao_id) c
+        join avaliacoes a on a.disciplina_id = c.disciplina_id
+        left join notas n on n.aluno_id = c.aluno_id and n.avaliacao_id = a.id
+        where exists (select 1 from notas x where x.avaliacao_id = a.id)
+        group by 1, 2)
       select md.disciplina_id, avg(md.m) as media, count(*) as n,
              1 + count(*) filter (where md.m > (select m from md eu where eu.aluno_id = $1 and eu.disciplina_id = md.disciplina_id)) as pos
       from md join alunos al on al.id = md.aluno_id
@@ -302,7 +307,8 @@ console.log('10. Comparação com o meu segmento (meu_desempenho e estatisticas_
         const e = esperadoDisc.get(x.disciplina_id);
         return e && perto(x.media_segmento, Number(e.media), 1e-4) && Number(x.alunos_segmento) === Number(e.n)
           && Number(x.minha_posicao_segmento) === Number(e.pos)
-          && perto(x.diferenca_segmento, Number(x.minha_media) - Number(x.media_segmento), 1e-4);
+          // as três colunas vêm arredondadas em 4 casas: a diferença pode variar até 1,5e-4
+          && perto(x.diferenca_segmento, Number(x.minha_media) - Number(x.media_segmento), 2e-4);
       }), `${seg}: média, posição e diferença por segmento em cada disciplina`);
       check(de.every((x) => Number(x.alunos_segmento) <= Number(x.alunos_com_nota) && Number(x.minha_posicao_segmento) <= Number(x.minha_posicao)),
         `${seg}: segmento cabe dentro da turma (alunos e posição)`);
@@ -320,6 +326,28 @@ console.log('10. Comparação com o meu segmento (meu_desempenho e estatisticas_
   check(/permission denied/.test(await erro(db.query(`select * from meu_desempenho()`)) ?? ''), 'anon não chama meu_desempenho');
   check(/permission denied/.test(await erro(db.query(`select * from estatisticas_avaliacoes()`)) ?? ''), 'anon não chama estatisticas_avaliacoes');
   await db.exec(`reset role`);
+}
+
+// ---------------------------------------------------------------- 11
+console.log('11. Média de cada disciplina do 1º semestre = coluna de média da planilha (falta = zero)');
+{
+  const db = await novoBanco();
+  const r = await db.query(`select a.nome_guerra, d.nome as disciplina, md.media
+                            from privado.medias_disciplina md
+                            join alunos a on a.id = md.aluno_id
+                            join disciplinas d on d.id = md.disciplina_id
+                            join semestres s on s.id = d.semestre_id where s.numero = 1`);
+  let n = 0, maxErr = 0;
+  for (const x of r.rows) {
+    if (x.nome_guerra === 'SZPIGEL' && x.disciplina === 'Cálculo I') continue;   // erro da planilha (G57)
+    const p = esperado.disc1[x.nome_guerra]?.[x.disciplina];
+    if (p == null) continue;
+    n++;
+    maxErr = Math.max(maxErr, Math.abs(Number(x.media) - p));
+    check(perto(x.media, p, 1e-9), `${x.nome_guerra} ${x.disciplina}: site ${x.media} x planilha ${p}`);
+  }
+  check(n > 400, `comparou ${n} médias de disciplina`);
+  console.log(`   ${n} médias conferidas, erro máximo ${maxErr.toExponential(2)}`);
 }
 
 console.log(`\n${ok} verificações ok, ${falhas} falhas`);

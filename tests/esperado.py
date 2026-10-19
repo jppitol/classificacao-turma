@@ -27,6 +27,13 @@ for nome, r in L1.items():
     if all(isinstance(ws1.cell(r, ci(c)).value,(int,float)) and ws1.cell(r, ci(c)).value > 0 for c in cols):
         sem1[nome] = {"mg": ws1[f"AK{r}"].value, "mm": ws1[f"AR{r}"].value}
 
+# 1b) Média de cada disciplina do 1º semestre, como a planilha calcula (coluna de média de cada uma;
+#     o que falta conta zero, ex.: recuperação = só a VF)
+COL_MEDIA_SEM1 = {"Física I": "F", "Cálculo I": "K", "Álgebra Linear I": "P", "IC": "T", "Química I": "Y",
+                  "Laboratório de Física I": "AD", "Laboratório de Química I": "AJ", "Instrução Militar I": "AP"}
+disc1 = {nome: {d: ws1[f"{c}{r}"].value for d, c in COL_MEDIA_SEM1.items() if isinstance(ws1[f"{c}{r}"].value, (int, float))}
+         for nome, r in L1.items()}
+
 # 2) NCF atual, recalculado em Python com a regra da planilha: avaliação sem nota conta como zero
 #    (divide pelo peso de TODAS as avaliações do curso, não só das lançadas)
 W = {}  # (sem, comp) -> [(w, col)]
@@ -68,6 +75,6 @@ for r in range(3, 97):
         nm, v = of.cell(r,cn).value, of.cell(r,cv).value
         if isinstance(nm,str) and isinstance(v,(int,float)): ncf_planilha[nm.strip().upper()] = v
 
-json.dump({"sem1": sem1, "parcial": parcial, "alocacao": alocacao, "ncf_planilha": ncf_planilha},
+json.dump({"sem1": sem1, "disc1": disc1, "parcial": parcial, "alocacao": alocacao, "ncf_planilha": ncf_planilha},
           open(Path(__file__).parent / "esperado.json", "w"), ensure_ascii=False, indent=1)
 print(len(sem1), "alunos com 1º semestre completo;", len(parcial), "parciais;", len(alocacao), "alocações")

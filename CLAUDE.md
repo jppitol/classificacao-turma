@@ -64,6 +64,10 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 | `filas_espera` | (segmento, engenharia, aluno esperando): posicao na fila, ordem_classificacao, nome, opcao (que opção essa engenharia é para ele), sou_eu |
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
 
+Média da disciplina (supabase/11_media_disciplina_com_zero.sql): avaliação que alguém da turma já lançou e o
+aluno não lançou conta zero (como na planilha; recuperação = só a VF). As que ninguém fez ficam de fora. A prévia
+em Minhas notas segue a mesma regra.
+
 Comparações com a média da turma (Minhas notas e Meu desempenho) mostram também a do segmento do
 aluno (ativa ou reserva), com as colunas `_segmento` (supabase/10_comparacao_segmento.sql). O Ranking não muda.
 

@@ -148,6 +148,7 @@ function abrirSemestre(id) {
 // Busca as médias oficiais no banco e põe na tela, substituindo qualquer prévia.
 // "pedido" evita que uma resposta antiga chegue depois de uma nova e sobrescreva.
 let pedido = 0;
+let feitas = new Set();   // avaliações que alguém da turma já lançou (para a prévia contar zero nelas)
 async function atualizarMedias() {
   const meu = ++pedido;
   const [desempenho, estatisticas] = await Promise.all([
@@ -170,6 +171,7 @@ async function atualizarMedias() {
   }
 
   const porAvaliacao = new Map(estatisticas.data.map((e) => [String(e.avaliacao_id), e]));
+  feitas = new Set(porAvaliacao.keys());
   for (const campo of document.querySelectorAll('[data-turma-avaliacao]')) {
     campo.textContent = formatar(porAvaliacao.get(campo.dataset.turmaAvaliacao)?.media, 2, 4);
   }
@@ -179,18 +181,26 @@ async function atualizarMedias() {
 }
 
 // Prévia da média da disciplina enquanto digita (única conta permitida no front;
-// some quando a nota é salva e o banco devolve a média oficial)
+// some quando a nota é salva e o banco devolve a média oficial).
+// Mesma regra do banco: campo vazio numa avaliação que a turma já fez conta zero.
 function mostrarPrevia(campoDigitado) {
   const card = campoDigitado.closest('[data-disciplina]');
   let somaPesos = 0;
   let soma = 0;
+  let temNota = false;
   for (const campo of card.querySelectorAll('input[data-avaliacao]')) {
-    const valor = lerNota(campo.value);
-    if (valor == null || Number.isNaN(valor)) continue;
+    let valor = lerNota(campo.value);
+    if (Number.isNaN(valor)) continue;
+    if (valor == null) {
+      if (!feitas.has(campo.dataset.avaliacao)) continue;   // ninguém fez ainda: fica de fora
+      valor = 0;
+    } else {
+      temNota = true;
+    }
     soma += Number(campo.dataset.peso) * valor;
     somaPesos += Number(campo.dataset.peso);
   }
-  card.querySelector('[data-minha-media]').textContent = somaPesos > 0 ? formatar(soma / somaPesos, 2, 4) : '-';
+  card.querySelector('[data-minha-media]').textContent = temNota && somaPesos > 0 ? formatar(soma / somaPesos, 2, 4) : '-';
   card.querySelector('.previa').hidden = false;
 }
 
