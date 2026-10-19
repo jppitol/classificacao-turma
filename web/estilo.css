@@ -450,3 +450,7 @@ button { font: inherit; cursor: pointer; }
 .turma-listas { display: grid; gap: 0.75rem; padding: 0.5rem 0.5rem 0.75rem; }
 @media (min-width: 700px) { .turma-listas { grid-template-columns: 1fr 1fr; } }
 .turma-titulo { margin: 0.25rem 0.5rem; font-size: 0.85rem; color: var(--texto-suave); }
+
+/* Meu desempenho: duas comparações por disciplina (turma e meu segmento) */
+.comparacao { display: block; margin-top: 0.35rem; }
+.comparacao .barra-dif { margin: 0.2rem 0 0; }

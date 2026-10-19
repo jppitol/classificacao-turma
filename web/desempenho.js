@@ -3,7 +3,7 @@
 // estatisticas_avaliacoes). O JavaScript só escolhe o tamanho das barras.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, ROTULO_SEMESTRE } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO } from './formato.js';
 
 const NOTA_EXPLICATIVA = `<p class="dica nota-explicativa">A média de cada disciplina aqui usa só as avaliações
   já lançadas. O NCF do ranking é diferente: conta zero no que ainda falta.</p>`;
@@ -55,8 +55,11 @@ async function montarPagina() {
       `<button type="button" role="tab" data-semestre="${semestre.id}" data-numero="${semestre.numero}">${ROTULO_SEMESTRE[semestre.numero]}</button>`);
 
     const doSemestre = disciplinas.data.filter((d) => d.semestre_id === semestre.id);
-    // Tamanho das barras: a maior diferença do semestre ocupa o lado todo
-    const maior = Math.max(0, ...doSemestre.map((d) => Math.abs(porDisciplina.get(d.id)?.diferenca ?? 0)));
+    // Tamanho das barras: a maior diferença do semestre (turma ou segmento) ocupa o lado todo
+    const maior = Math.max(0, ...doSemestre.flatMap((d) => [
+      Math.abs(porDisciplina.get(d.id)?.diferenca ?? 0),
+      Math.abs(porDisciplina.get(d.id)?.diferenca_segmento ?? 0),
+    ]));
 
     let html = htmlResumo(semestre, doSemestre, porDisciplina) + NOTA_EXPLICATIVA;
     for (const [componente, titulo] of [['graduacao', 'Graduação'], ['militar', 'Militar']]) {
@@ -110,7 +113,11 @@ function htmlResumo(semestre, doSemestre, porDisciplina) {
   // Só disciplinas que contam na média e em que tenho nota
   const minhas = doSemestre
     .filter((d) => Number(d.peso) > 0 && porDisciplina.get(d.id)?.diferenca != null)
-    .map((d) => ({ nome: d.nome, dif: Number(porDisciplina.get(d.id).diferenca) }));
+    .map((d) => ({
+      nome: d.nome,
+      dif: Number(porDisciplina.get(d.id).diferenca),
+      difSeg: Number(porDisciplina.get(d.id).diferenca_segmento),
+    }));
 
   if (minhas.length === 0) {
     return `<div class="cartao resumo">
@@ -118,9 +125,14 @@ function htmlResumo(semestre, doSemestre, porDisciplina) {
     </div>`;
   }
 
-  const acima = minhas.filter((d) => lado(d.dif) === 'acima').length;
-  const abaixo = minhas.filter((d) => lado(d.dif) === 'abaixo').length;
-  const naMedia = minhas.length - acima - abaixo;
+  // "Acima da turma em 5 de 8 disciplinas. Abaixo em 3." (e o mesmo para o segmento)
+  const contagem = (campo, grupo) => {
+    const acima = minhas.filter((d) => lado(d[campo]) === 'acima').length;
+    const abaixo = minhas.filter((d) => lado(d[campo]) === 'abaixo').length;
+    const naMedia = minhas.length - acima - abaixo;
+    return `<p class="resumo-contagem">Acima da ${grupo} em <strong>${acima} de ${minhas.length}</strong> disciplinas.
+      Abaixo em <strong>${abaixo}</strong>.${naMedia ? ` Na média em <strong>${naMedia}</strong>.` : ''}</p>`;
+  };
   const ordenadas = [...minhas].sort((a, b) => b.dif - a.dif);
   const melhor = ordenadas[0];
   const pior = ordenadas.at(-1);
@@ -130,8 +142,9 @@ function htmlResumo(semestre, doSemestre, porDisciplina) {
 
   return `<div class="cartao resumo">
     <h2 class="cartao-titulo">Resumo do ${ROTULO_SEMESTRE[semestre.numero]}</h2>
-    <p class="resumo-contagem">Acima da turma em <strong>${acima} de ${minhas.length}</strong> disciplinas.
-      Abaixo em <strong>${abaixo}</strong>.${naMedia ? ` Na média em <strong>${naMedia}</strong>.` : ''}</p>
+    ${contagem('dif', 'turma')}
+    ${contagem('difSeg', aluno.segmento)}
+    <p class="dica" style="margin:0.25rem 0">Melhor e pior em relação à turma:</p>
     ${linhaDisciplina('Melhor', melhor)}
     ${minhas.length > 1 ? linhaDisciplina('Pior', pior) : ''}
   </div>`;
@@ -139,13 +152,13 @@ function htmlResumo(semestre, doSemestre, porDisciplina) {
 
 // ---------- Disciplina: barra divergente + detalhe ----------
 
-function htmlBarra(dif, maior) {
+function htmlBarra(dif, maior, grupo) {
   const classe = lado(dif);
   const largura = maior > 0 ? (Math.abs(dif) / maior) * 100 : 0;
   const rotulo = `<span class="rotulo-dif">${formatarDiferenca(dif)}</span>`;
   const barra = `<span class="barra" style="width:${largura.toFixed(1)}%"></span>`;
-  const descricao = classe === 'neutro' ? 'na média da turma'
-    : `${formatar(Math.abs(dif), 2)} ${classe === 'acima' ? 'acima' : 'abaixo'} da média da turma`;
+  const descricao = classe === 'neutro' ? `na média da ${grupo}`
+    : `${formatar(Math.abs(dif), 2)} ${classe === 'acima' ? 'acima' : 'abaixo'} da média da ${grupo}`;
   return `
     <span class="barra-dif ${classe}" role="img" aria-label="${descricao}">
       <span class="lado-esq">${classe === 'abaixo' ? rotulo + barra : ''}</span>
@@ -156,9 +169,10 @@ function htmlBarra(dif, maior) {
 function htmlDisciplina(disciplina, d, avaliacoes, porAvaliacao, maior) {
   const etiqueta = Number(disciplina.peso) === 0 ? NAO_CONTA : '';
   const meio = d
-    ? `${htmlBarra(Number(d.diferenca), maior)}
-       <span class="disc-numeros">${[`Minha ${formatar(d.minha_media, 2, 4)}`, `Turma ${formatar(d.media_turma, 2, 4)}`,
-         posicao(d.minha_posicao, d.alunos_com_nota)].filter(Boolean).join(' · ')}</span>`
+    ? `<span class="disc-numeros">Minha média <strong>${formatar(d.minha_media, 2, 4)}</strong></span>
+       ${htmlComparacao('Turma', 'turma', d.diferenca, d.media_turma, d.minha_posicao, d.alunos_com_nota, maior)}
+       ${htmlComparacao(NOME_SEGMENTO[aluno.segmento], aluno.segmento, d.diferenca_segmento, d.media_segmento,
+                        d.minha_posicao_segmento, d.alunos_segmento, maior)}`
     : '<span class="disc-numeros">Sem nota sua ainda</span>';
 
   return `
@@ -173,6 +187,15 @@ function htmlDisciplina(disciplina, d, avaliacoes, porAvaliacao, maior) {
     </article>`;
 }
 
+// Uma linha de comparação: "Turma · média 7,13 · 3º de 85" e a barra embaixo
+function htmlComparacao(rotulo, grupo, dif, media, pos, total, maior) {
+  return `
+    <span class="comparacao">
+      <span class="disc-numeros"><strong>${rotulo}</strong> · média ${formatar(media, 2, 4)}${pos != null ? ` · ${posicao(pos, total)}` : ''}</span>
+      ${htmlBarra(Number(dif), maior, grupo)}
+    </span>`;
+}
+
 function htmlAvaliacao(a, e) {
   const etiqueta = Number(a.peso) === 0 ? ' ' + NAO_CONTA : '';
   const minha = e?.minha_nota != null
@@ -183,10 +206,16 @@ function htmlAvaliacao(a, e) {
        `${formatar(e.minima, 2, 4)} a ${formatar(e.maxima, 2, 4)}`,
        posicao(e.minha_posicao, e.alunos)].filter(Boolean).join(' · ')
     : 'ainda sem notas da turma';
+  const segmento = e
+    ? (Number(e.alunos_segmento) > 0
+        ? [`${aluno.segmento} ${formatar(e.media_segmento, 2, 4)}`, posicao(e.minha_posicao_segmento, e.alunos_segmento)].filter(Boolean).join(' · ')
+        : `${aluno.segmento}: ainda sem notas`)
+    : '';
   return `
     <div class="aval-linha">
       <div class="aval-topo"><span>${esc(a.nome)}${etiqueta}</span>${minha}</div>
       <div class="aval-turma">${turma}</div>
+      ${segmento ? `<div class="aval-turma">${segmento}</div>` : ''}
     </div>`;
 }
 

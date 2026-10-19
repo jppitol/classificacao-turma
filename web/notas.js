@@ -1,7 +1,7 @@
 // Página "Minhas notas": lançar, corrigir e apagar as próprias notas.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, ROTULO_SEMESTRE } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO } from './formato.js';
 
 // ---------- Formatação ----------
 
@@ -112,7 +112,7 @@ function htmlDisciplina(disciplina, avaliacoes, minhaNota) {
         <button type="button" class="apagar${valor === '' ? ' invisivel' : ''}" data-apagar="${a.id}"
                 aria-label="Deixar ${esc(a.nome)} em branco" title="Deixar em branco">×</button>
         <div class="avaliacao-info">
-          <span>Turma: <span data-turma-avaliacao="${a.id}">-</span></span>
+          <span>Turma: <span data-turma-avaliacao="${a.id}">-</span> · ${NOME_SEGMENTO[aluno.segmento]}: <span data-segmento-avaliacao="${a.id}">-</span></span>
           <span class="status" aria-live="polite"></span>
         </div>
       </div>`;
@@ -126,6 +126,7 @@ function htmlDisciplina(disciplina, avaliacoes, minhaNota) {
       <div class="disciplina-medias">
         <span>Minha média: <strong data-minha-media>-</strong> <small class="previa" hidden>prévia</small></span>
         <span>Turma: <strong data-media-turma>-</strong></span>
+        <span>${NOME_SEGMENTO[aluno.segmento]}: <strong data-media-segmento>-</strong></span>
       </div>
       ${linhas || '<p class="vazio">Sem avaliações cadastradas.</p>'}
     </article>`;
@@ -164,12 +165,16 @@ async function atualizarMedias() {
     const d = porDisciplina.get(card.dataset.disciplina);
     card.querySelector('[data-minha-media]').textContent = formatar(d?.minha_media, 2, 4);
     card.querySelector('[data-media-turma]').textContent = formatar(d?.media_turma, 2, 4);
+    card.querySelector('[data-media-segmento]').textContent = formatar(d?.media_segmento, 2, 4);
     card.querySelector('.previa').hidden = true;
   }
 
   const porAvaliacao = new Map(estatisticas.data.map((e) => [String(e.avaliacao_id), e]));
   for (const campo of document.querySelectorAll('[data-turma-avaliacao]')) {
     campo.textContent = formatar(porAvaliacao.get(campo.dataset.turmaAvaliacao)?.media, 2, 4);
+  }
+  for (const campo of document.querySelectorAll('[data-segmento-avaliacao]')) {
+    campo.textContent = formatar(porAvaliacao.get(campo.dataset.segmentoAvaliacao)?.media_segmento, 2, 4);
   }
 }
 

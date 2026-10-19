@@ -273,5 +273,54 @@ console.log('09. Filas de espera por engenharia (aba "Turmas" da planilha)');
   await db.exec(`reset role`);
 }
 
+// ---------------------------------------------------------------- 10
+console.log('10. Comparação com o meu segmento (meu_desempenho e estatisticas_avaliacoes)');
+{
+  const db = await novoBanco();
+  for (const seg of ['ativa', 'reserva']) {
+    // um aluno do segmento com notas
+    const aluno = (await db.query(`select a.id from alunos a join notas n on n.aluno_id = a.id
+                                   where a.segmento = $1 group by a.id order by count(*) desc, a.id limit 1`, [seg])).rows[0].id;
+    const uid = (await db.query(`insert into auth.users (email) values ($1) returning id`, [`seg-${seg}@ime.eb.br`])).rows[0].id;
+    await db.query(`update alunos set user_id = $1 where id = $2`, [uid, aluno]);
+    // conta independente, direto nas tabelas: média da disciplina = soma(peso*nota)/soma(peso)
+    const esperadoDisc = new Map((await db.query(`
+      with md as (select n.aluno_id, a.disciplina_id, sum(a.peso * n.valor) / nullif(sum(a.peso), 0) as m
+                  from notas n join avaliacoes a on a.id = n.avaliacao_id group by 1, 2)
+      select md.disciplina_id, avg(md.m) as media, count(*) as n,
+             1 + count(*) filter (where md.m > (select m from md eu where eu.aluno_id = $1 and eu.disciplina_id = md.disciplina_id)) as pos
+      from md join alunos al on al.id = md.aluno_id
+      where al.segmento = $2 and md.disciplina_id in (select disciplina_id from md where aluno_id = $1)
+      group by md.disciplina_id`, [aluno, seg])).rows.map((x) => [x.disciplina_id, x]));
+    const esperadoAval = new Map((await db.query(`
+      select n.avaliacao_id, avg(n.valor) as media, count(*) as n
+      from notas n join alunos al on al.id = n.aluno_id where al.segmento = $1 group by 1`, [seg])).rows.map((x) => [x.avaliacao_id, x]));
+
+    await comoUsuario(db, uid, async () => {
+      const de = (await db.query(`select * from meu_desempenho()`)).rows;
+      check(de.length > 0 && de.every((x) => {
+        const e = esperadoDisc.get(x.disciplina_id);
+        return e && perto(x.media_segmento, Number(e.media), 1e-4) && Number(x.alunos_segmento) === Number(e.n)
+          && Number(x.minha_posicao_segmento) === Number(e.pos)
+          && perto(x.diferenca_segmento, Number(x.minha_media) - Number(x.media_segmento), 1e-4);
+      }), `${seg}: média, posição e diferença por segmento em cada disciplina`);
+      check(de.every((x) => Number(x.alunos_segmento) <= Number(x.alunos_com_nota) && Number(x.minha_posicao_segmento) <= Number(x.minha_posicao)),
+        `${seg}: segmento cabe dentro da turma (alunos e posição)`);
+      const es = (await db.query(`select * from estatisticas_avaliacoes()`)).rows;
+      check(es.length > 0 && es.every((x) => {
+        const e = esperadoAval.get(x.avaliacao_id);
+        return e ? perto(x.media_segmento, Number(e.media), 1e-4) && Number(x.alunos_segmento) === Number(e.n)
+                 : x.media_segmento === null && Number(x.alunos_segmento) === 0;
+      }), `${seg}: média por avaliação no segmento`);
+      check(es.filter((x) => x.minha_nota != null).every((x) => x.minha_posicao_segmento != null && Number(x.minha_posicao_segmento) <= Number(x.minha_posicao)),
+        `${seg}: minha posição no segmento em cada avaliação`);
+    });
+  }
+  await db.exec(`set role anon`);
+  check(/permission denied/.test(await erro(db.query(`select * from meu_desempenho()`)) ?? ''), 'anon não chama meu_desempenho');
+  check(/permission denied/.test(await erro(db.query(`select * from estatisticas_avaliacoes()`)) ?? ''), 'anon não chama estatisticas_avaliacoes');
+  await db.exec(`reset role`);
+}
+
 console.log(`\n${ok} verificações ok, ${falhas} falhas`);
 process.exit(falhas ? 1 : 0);

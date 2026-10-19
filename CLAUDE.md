@@ -56,13 +56,16 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 |---|---|
 | `ranking` | aluno da turma: posicao, nome, segmento, media_graduacao, media_militar, ncf, pendencias, sou_eu |
 | `medias_turma` | segmento ('ativa', 'reserva' e null = turma toda): alunos, media_graduacao, media_militar, media_ncf |
-| `meu_desempenho` | disciplina com nota minha: semestre, disciplina_id, disciplina, componente, minha_media, media_turma, diferenca, minha_posicao, alunos_com_nota |
-| `estatisticas_avaliacoes` | avaliação com alguma nota na turma: avaliacao_id, minha_nota, media, desvio, minima, maxima, alunos, minha_posicao |
+| `meu_desempenho` | disciplina com nota minha: semestre, disciplina_id, disciplina, componente, minha_media, media_turma, diferenca, minha_posicao, alunos_com_nota, e o mesmo no meu segmento: media_segmento, diferenca_segmento, minha_posicao_segmento, alunos_segmento |
+| `estatisticas_avaliacoes` | avaliação com alguma nota na turma: avaliacao_id, minha_nota, media, desvio, minima, maxima, alunos, minha_posicao, media_segmento, alunos_segmento, minha_posicao_segmento |
 | `distribuicao` | aluno: segmento, ordem_classificacao, nome, engenharia (null = sem vaga nas opções), opcao, sou_eu |
 | `resumo_engenharias` | (segmento, engenharia): vagas (na reserva, o que sobrou da sala), ocupadas, ncf_corte (NCF do último que entrou) |
 | `minha_engenharia` | minha opção, em ordem: opcao, engenharia, situacao ('na vaga' / 'espera' / 'abaixo'), posicao_espera, ncf_corte, meu_ncf, falta |
 | `filas_espera` | (segmento, engenharia, aluno esperando): posicao na fila, ordem_classificacao, nome, opcao (que opção essa engenharia é para ele), sou_eu |
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
+
+Comparações com a média da turma (Minhas notas e Meu desempenho) mostram também a do segmento do
+aluno (ativa ou reserva), com as colunas `_segmento` (supabase/10_comparacao_segmento.sql). O Ranking não muda.
 
 `pendencias` = quantas avaliações já feitas pela turma o aluno ainda não lançou. Mostrar como aviso
 ("faltam 3 notas") porque nota não lançada conta como zero no NCF.
