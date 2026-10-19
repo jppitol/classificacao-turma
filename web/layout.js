@@ -58,7 +58,7 @@ function desenharTopo(nome) {
   topo.className = 'topo';
   topo.innerHTML = `
     <div class="topo-linha">
-      <a class="marca" href="notas.html">Turma XXX</a>
+      <a class="marca" href="notas.html"><img src="icone.svg" alt="">Turma XXX</a>
       <span class="usuario"><strong></strong> <button type="button" class="botao-link">Sair</button></span>
     </div>
     <nav class="nav">
@@ -66,6 +66,7 @@ function desenharTopo(nome) {
     </nav>`;
   topo.querySelector('strong').textContent = nome;   // textContent: nome nunca vira HTML
   topo.querySelector('button').addEventListener('click', sair);
+  topo.querySelector('.usuario').prepend(window.tema.criarBotao());   // botão de tema (tema.js)
   document.body.prepend(topo);
   topo.querySelector('[aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest' });
 }

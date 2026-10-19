@@ -1,4 +1,4 @@
-/* ---------- Cores (tema claro e escuro) ---------- */
+/* ---------- Cores (tema claro e escuro; ver tema.js) ---------- */
 :root {
   color-scheme: light dark;
   --fundo: #f4f5f7;
@@ -16,8 +16,25 @@
   --raio: 10px;
 }
 
+/* Escuro: quando a pessoa escolhe "Escuro" no Perfil, ou deixa "Automático" e o sistema está escuro */
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --fundo: #121418;
+  --superficie: #1c1f25;
+  --texto: #e7e9ec;
+  --texto-suave: #9aa3ae;
+  --borda: #343943;
+  --destaque: #6ea2f0;
+  --destaque-texto: #0d1117;
+  --destaque-suave: #1e2a3d;
+  --erro: #ff8a80;
+  --erro-fundo: #3a1c1a;
+  --sucesso: #6fd38a;
+  --sucesso-fundo: #16301f;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-tema="claro"]) {
+    color-scheme: dark;
     --fundo: #121418;
     --superficie: #1c1f25;
     --texto: #e7e9ec;
@@ -32,6 +49,7 @@
     --sucesso-fundo: #16301f;
   }
 }
+:root[data-tema="claro"] { color-scheme: light; }
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; }
@@ -454,3 +472,41 @@ button { font: inherit; cursor: pointer; }
 /* Meu desempenho: duas comparações por disciplina (turma e meu segmento) */
 .comparacao { display: block; margin-top: 0.35rem; }
 .comparacao .barra-dif { margin: 0.2rem 0 0; }
+
+/* seletor de tema: três botões lado a lado (são rádios por baixo) */
+.seletor-tema { display: flex; gap: 0.25rem; padding: 0.25rem; border-radius: 8px; background: var(--fundo); border: 1px solid var(--borda); }
+.seletor-tema label { flex: 1; margin: 0; font-weight: 500; }
+.seletor-tema input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seletor-tema span {
+  display: block;
+  padding: 0.55rem 0.25rem;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  cursor: pointer;
+}
+.seletor-tema input:checked + span { background: var(--superficie); color: var(--destaque); font-weight: 600; box-shadow: 0 1px 3px rgb(0 0 0 / 0.15); }
+.seletor-tema input:focus-visible + span { outline: 2px solid var(--destaque); outline-offset: 1px; }
+
+/* ícone (paraquedista) ao lado do nome no topo */
+.marca { display: inline-flex; align-items: center; gap: 0.4rem; }
+.marca img { width: 1.5rem; height: 1.5rem; }
+.login .logo { display: block; margin: 0 auto 0.5rem; }
+
+/* botão de tema (topo das páginas e canto do login) */
+.botao-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto-suave);
+}
+.botao-tema:hover { color: var(--destaque); border-color: var(--destaque); }
+.canto-tema { position: fixed; top: 0.75rem; right: 0.75rem; }

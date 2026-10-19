@@ -39,6 +39,14 @@ function montarPagina(aluno) {
   });
 
   document.getElementById('sair').addEventListener('click', sair);
+
+  // Tema: marca a opção atual e troca na hora ao tocar (window.tema vem do tema.js)
+  const marcar = (tema) => { document.querySelector(`input[name="tema"][value="${tema}"]`).checked = true; };
+  marcar(window.tema.obter());
+  for (const opcao of document.querySelectorAll('input[name="tema"]')) {
+    opcao.addEventListener('change', () => window.tema.definir(opcao.value));
+  }
+  window.addEventListener('tema-mudou', (evento) => marcar(evento.detail));   // tocou no botão do topo
 }
 
 // ---------- Início ----------

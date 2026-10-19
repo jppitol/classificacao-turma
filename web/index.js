@@ -2,6 +2,12 @@
 import { supabase } from './supabase.js';
 import { traduzirErro } from './formato.js';
 
+// Botão de tema no canto superior direito (tema.js)
+const cantoTema = document.createElement('div');
+cantoTema.className = 'canto-tema';
+cantoTema.append(window.tema.criarBotao());
+document.body.append(cantoTema);
+
 // Para onde os links dos emails (confirmação e nova senha) trazem a pessoa de volta
 const URL_INICIAL = new URL('index.html', location.href).href;
 const PRIMEIRA_PAGINA = 'notas.html';

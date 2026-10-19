@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Paraquedista (ícone da Turma XXX) -->
+  <!-- velame: cúpula com a borda de baixo recortada -->
+  <path d="M5 27 Q5 5 32 5 Q59 5 59 27 Q52.5 22.5 45.5 27 Q38.75 22.5 32 27 Q25.25 22.5 18.5 27 Q11.5 22.5 5 27 Z" fill="#9DBB5C"/>
+  <!-- gomos escuros alternados -->
+  <path d="M5 27 Q5 5 32 5 Q19 9 18.5 27 Q11.5 22.5 5 27 Z" fill="#4F7530"/>
+  <path d="M32 5 Q33.5 14 32 27 Q38.75 22.5 45.5 27 Q45 9 32 5 Z" fill="#4F7530"/>
+  <!-- cordas -->
+  <g stroke="#F3F0E3" stroke-width="3" stroke-linecap="round" opacity="0.9">
+    <line x1="5" y1="27" x2="30" y2="47"/>
+    <line x1="18.5" y1="27" x2="30.5" y2="47"/>
+    <line x1="45.5" y1="27" x2="33.5" y2="47"/>
+    <line x1="59" y1="27" x2="34" y2="47"/>
+  </g>
+  <g stroke="#2E3B22" stroke-width="1.3" stroke-linecap="round">
+    <line x1="5" y1="27" x2="30" y2="47"/>
+    <line x1="18.5" y1="27" x2="30.5" y2="47"/>
+    <line x1="45.5" y1="27" x2="33.5" y2="47"/>
+    <line x1="59" y1="27" x2="34" y2="47"/>
+  </g>
+  <!-- paraquedista -->
+  <g fill="#2E3B22" stroke="#F3F0E3" stroke-width="1.6" stroke-linejoin="round" paint-order="stroke">
+    <circle cx="32" cy="45" r="3.6"/>
+    <path d="M27.5 49.5 Q32 47.5 36.5 49.5 L35.5 56 L28.5 56 Z"/>
+    <path d="M28.6 55 L26 61.5 L28.6 62.3 L31.3 56 Z"/>
+    <path d="M35.4 55 L38 61.5 L35.4 62.3 L32.7 56 Z"/>
+    <path d="M27.6 50 L23.5 46 L25 44.8 L29 48.6 Z"/>
+    <path d="M36.4 50 L40.5 46 L39 44.8 L35 48.6 Z"/>
+  </g>
+</svg>
