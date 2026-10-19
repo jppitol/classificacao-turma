@@ -16,3 +16,21 @@ export function formatar(numero, casas = 2, maxCasas = casas) {
   if (numero == null) return '-';
   return Number(numero).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: maxCasas });
 }
+
+export const NOME_SEGMENTO = { ativa: 'Ativa', reserva: 'Reserva' };
+
+// Mensagens do Supabase em inglês -> português. O erro do cadastro de email fora
+// da lista já vem em português do banco, então cai no "error.message".
+export function traduzirErro(error) {
+  const traducoes = {
+    invalid_credentials: 'Email ou senha incorretos.',
+    email_not_confirmed: 'Confirme seu email antes de entrar (veja a caixa de entrada e o spam).',
+    weak_password: 'Senha fraca. Use pelo menos 6 caracteres.',
+    same_password: 'A senha nova precisa ser diferente da atual.',
+    over_email_send_rate_limit: 'Muitos emails enviados. Espere alguns minutos e tente de novo.',
+    over_request_rate_limit: 'Muitas tentativas. Espere alguns minutos e tente de novo.',
+    user_already_exists: 'Já existe conta com este email. Use "Entrar" ou "Esqueci a senha".',
+    reauthentication_needed: 'Por segurança, saia, entre de novo e tente outra vez.',
+  };
+  return traducoes[error.code] || error.message;
+}

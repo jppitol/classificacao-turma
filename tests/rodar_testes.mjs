@@ -89,6 +89,16 @@ console.log('3. Distribuição nas engenharias = aba Preferências (usando o NCF
   const db = await novoBanco();
   // troca as notas por uma única "nota" = NCF da planilha, para isolar o algoritmo
   await db.exec(`delete from notas; update pesos_ncf set peso_graduacao = 1, peso_militar = 0;`);
+  // vagas da planilha: ativa fixa; reserva = capacidade - ocupadas pela ativa, com a capacidade
+  // ajustada pra sobrar pra reserva o que a planilha dava (+ vaga da ativa que sobrar)
+  const VAGAS_PLANILHA = {
+    'COMP': [13, 14], 'CART': [8, 7], 'MEC AUT': [5, 12], 'MEC ARM': [5, 12], 'ELE': [4, 12],
+    'ELO': [7, 12], 'TEL': [6, 12], 'FC': [8, 12], 'MAT': [3, 12], 'QUI': [7, 12] };
+  for (const [e, [at, rs]] of Object.entries(VAGAS_PLANILHA)) {
+    await db.query(`update vagas set quantidade = $1 where segmento = 'ativa' and engenharia = $2`, [at, e]);
+    await db.query(`update capacidades set capacidade = $1, cg = 0, ofa = 0, ona = 0, destrancamento = 0
+                    where engenharia = $2`, [at + rs, e]);
+  }
   const aval = (await db.query(`select a.id from avaliacoes a join disciplinas d on d.id = a.disciplina_id
                                  join semestres s on s.id = d.semestre_id
                                  where s.numero = 1 and d.nome = 'Cálculo I' and a.nome = 'VF'`)).rows[0].id;
@@ -110,6 +120,39 @@ console.log('3. Distribuição nas engenharias = aba Preferências (usando o NCF
   check(me.rows.filter(x => x.situacao === 'na vaga').length <= 1, 'no máximo uma "na vaga"');
   const res = await comoUsuario(db, uid, () => db.query(`select * from resumo_engenharias()`));
   for (const x of res.rows) check(Number(x.ocupadas) <= x.vagas, `${x.segmento} ${x.engenharia} não estoura vagas`);
+}
+
+// ---------------------------------------------------------------- 3b
+console.log('3b. Vagas da reserva = o que sobra da sala depois da ativa (DIEx 326-A1)');
+{
+  const db = await novoBanco();
+  const uid = (await db.query(`insert into auth.users (email) values ('t3b@ime.eb.br') returning id`)).rows[0].id;
+  await db.exec(`update alunos set user_id = '${uid}' where nome_guerra = 'BOEIRA'`);
+  const tot = (await db.query(`select (select sum(quantidade) from vagas where segmento='ativa') a,
+                                      (select count(*) from vagas where segmento='reserva') r`)).rows[0];
+  check(Number(tot.a) === 69 && Number(tot.r) === 0, `ativa 69 vagas fixas, reserva sem linhas em vagas (${tot.a}, ${tot.r})`);
+  // todo mundo da ativa quer COMP em 1º: ativa lota COMP (14), reserva fica com 27-2-14 = 11
+  const resumo = async () => Object.fromEntries((await comoUsuario(db, uid, () => db.query(`select * from resumo_engenharias()`)))
+    .rows.map((x) => [`${x.segmento}/${x.engenharia}`, x]));
+  let r = await resumo();
+  for (const x of Object.values(r)) check(Number(x.ocupadas) <= x.vagas, `${x.segmento} ${x.engenharia} não estoura`);
+  // a "vaga máxima da reserva" do documento só vale com a ativa lotada; aqui conferimos a fórmula
+  const cap = Object.fromEntries((await db.query(`select * from capacidades`)).rows.map((c) => [c.engenharia, c]));
+  for (const [e, c] of Object.entries(cap)) {
+    const livre = c.capacidade - c.cg - c.ofa - c.ona - c.destrancamento;
+    const at = r[`ativa/${e}`], rs = r[`reserva/${e}`];
+    check(rs.vagas === Math.max(livre - Number(at.ocupadas), 0), `reserva ${e}: ${rs.vagas} = ${livre} - ${at.ocupadas}`);
+  }
+  // ninguém da ativa quer MAT: as 3 vagas da ativa sobram e vão pra reserva (8 - 0 - 0 = 8)
+  await db.exec(`delete from preferencias p using alunos a where a.id = p.aluno_id and a.segmento = 'ativa' and p.engenharia = 'MAT'`);
+  r = await resumo();
+  check(Number(r['ativa/MAT'].ocupadas) === 0 && r['reserva/MAT'].vagas === 8, `MAT sem ativa: reserva ganha 8 vagas (${r['reserva/MAT'].vagas})`);
+  // ativa lotando COMP: todo mundo da ativa com COMP em 1º
+  await db.exec(`update preferencias p set ordem = ordem + 100 from alunos a where a.id = p.aluno_id and a.segmento = 'ativa'`);
+  await db.exec(`update preferencias p set ordem = 1 from alunos a where a.id = p.aluno_id and a.segmento = 'ativa' and p.engenharia = 'COMP'`);
+  r = await resumo();
+  check(Number(r['ativa/COMP'].ocupadas) === 14 && r['reserva/COMP'].vagas === 11, `COMP lotada pela ativa: reserva 11 (${r['reserva/COMP'].vagas})`);
+  console.log(`   reserva/MAT ${r['reserva/MAT'].vagas}, reserva/COMP ${r['reserva/COMP'].vagas}, reserva/TEL ${r['reserva/TEL'].vagas}`);
 }
 
 // ---------------------------------------------------------------- 4
@@ -193,6 +236,41 @@ console.log('05. Ordem das avaliações: VE 1, VC, VE 2, VF');
   const quatro = r.rows.filter((x) => ['VE 1', 'VE 2', 'VC', 'VF'].every((n) => x.lista.split(',').includes(n)) && x.lista.split(',').length === 4);
   check(quatro.length > 0 && quatro.every((x) => x.lista === 'VE 1,VC,VE 2,VF'), 'VC vem antes da VE 2 nas disciplinas com VE 1, VE 2, VC e VF');
   check(r.rows.every((x) => x.sem_empate), 'nenhuma disciplina tem duas avaliações na mesma posição');
+}
+
+// ---------------------------------------------------------------- 09
+console.log('09. Filas de espera por engenharia (aba "Turmas" da planilha)');
+{
+  const db = await novoBanco();
+  // usuário de teste = o aluno que ficou na pior opção (para ter fila de espera)
+  const pior = (await db.query(`select x.aluno_id from privado.alocacao(1::smallint) x
+                                where x.opcao is not null order by x.opcao desc, x.ordem_classificacao limit 1`)).rows[0].aluno_id;
+  const uid = (await db.query(`insert into auth.users (email) values ('fila@ime.eb.br') returning id`)).rows[0].id;
+  await db.query(`update alunos set user_id = $1 where id = $2`, [uid, pior]);
+
+  await comoUsuario(db, uid, async () => {
+    const f = (await db.query(`select * from filas_espera()`)).rows;
+    check(f.length > 0, 'filas_espera devolve linhas');
+    // cada linha é uma opção MELHOR que a obtida pelo aluno (ou ele ficou sem vaga)
+    const nomes = new Map((await db.query(`select * from distribuicao()`)).rows.map((d) => [`${d.segmento}|${d.nome}`, d]));
+    check(f.every((x) => { const d = nomes.get(`${x.segmento}|${x.nome}`); return d && (d.opcao == null || x.opcao < d.opcao); }),
+      'fila só tem opções melhores que a obtida');
+    check(f.every((x) => { const d = nomes.get(`${x.segmento}|${x.nome}`); return d.engenharia !== x.engenharia; }),
+      'ninguém espera na engenharia em que já está');
+    // posições 1, 2, 3... em cada (segmento, engenharia), seguindo a classificação
+    const grupos = Map.groupBy(f, (x) => `${x.segmento}|${x.engenharia}`);
+    check([...grupos.values()].every((g) => g.every((x, i) => Number(x.posicao) === i + 1 && (i === 0 || g[i - 1].ordem_classificacao < x.ordem_classificacao))),
+      'posição na fila segue a classificação');
+    // bate com minha_engenharia()
+    const minha = (await db.query(`select * from minha_engenharia() where situacao = 'espera'`)).rows;
+    const eu = f.filter((x) => x.sou_eu);
+    check(minha.length > 0 && minha.length === eu.length &&
+          minha.every((m) => eu.some((x) => x.engenharia === m.engenharia && Number(x.posicao) === Number(m.posicao_espera))),
+      'minhas filas = minha_engenharia()');
+  });
+  await db.exec(`set role anon`);
+  check(/permission denied/.test(await erro(db.query(`select * from filas_espera()`)) ?? ''), 'anon não chama filas_espera');
+  await db.exec(`reset role`);
 }
 
 console.log(`\n${ok} verificações ok, ${falhas} falhas`);

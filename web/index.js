@@ -1,5 +1,6 @@
 // Página de entrar / criar conta / esqueci a senha.
 import { supabase } from './supabase.js';
+import { traduzirErro } from './formato.js';
 
 // Para onde os links dos emails (confirmação e nova senha) trazem a pessoa de volta
 const URL_INICIAL = new URL('index.html', location.href).href;
@@ -28,21 +29,6 @@ function abrirPainel(nome) {
     form.hidden = form.dataset.painel !== nome;
   }
   abas.hidden = nome === 'nova-senha';
-}
-
-// Mensagens do Supabase em inglês -> português. O erro do cadastro de email fora
-// da lista já vem em português do banco, então cai no "error.message".
-function traduzirErro(error) {
-  const traducoes = {
-    invalid_credentials: 'Email ou senha incorretos.',
-    email_not_confirmed: 'Confirme seu email antes de entrar (veja a caixa de entrada e o spam).',
-    weak_password: 'Senha fraca. Use pelo menos 6 caracteres.',
-    same_password: 'A senha nova precisa ser diferente da atual.',
-    over_email_send_rate_limit: 'Muitos emails enviados. Espere alguns minutos e tente de novo.',
-    over_request_rate_limit: 'Muitas tentativas. Espere alguns minutos e tente de novo.',
-    user_already_exists: 'Já existe conta com este email. Use "Entrar" ou "Esqueci a senha".',
-  };
-  return traducoes[error.code] || error.message;
 }
 
 // Desativa o botão enquanto espera o Supabase, para não enviar duas vezes

@@ -9,9 +9,32 @@
 </head>
 <body>
   <p class="carregando" id="carregando">Carregando...</p>
-  <main class="pagina" id="conteudo" hidden>
+  <main class="pagina pagina-estreita" id="conteudo" hidden>
     <h1>Perfil</h1>
-    <p class="vazio">Em construção.</p>
+
+    <div class="cartao">
+      <dl class="dados">
+        <dt>Nome de guerra</dt><dd id="nome-guerra"></dd>
+        <dt>Segmento</dt><dd id="segmento"></dd>
+        <dt>Email</dt><dd id="email"></dd>
+      </dl>
+    </div>
+
+    <div class="cartao">
+      <h2 class="cartao-titulo">Trocar a senha</h2>
+      <div id="mensagem" class="mensagem" role="status" hidden></div>
+      <form id="form-senha">
+        <label>Nova senha
+          <input type="password" name="senha" autocomplete="new-password" minlength="6" required>
+        </label>
+        <label>Repita a nova senha
+          <input type="password" name="confirmar" autocomplete="new-password" minlength="6" required>
+        </label>
+        <button class="botao" type="submit">Salvar nova senha</button>
+      </form>
+    </div>
+
+    <button type="button" class="botao-secundario botao-sair" id="sair">Sair</button>
   </main>
 </body>
 </html>

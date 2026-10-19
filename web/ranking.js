@@ -2,9 +2,7 @@
 // Todos os números vêm prontos do banco (RPCs ranking e medias_turma).
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar } from './formato.js';
-
-const NOME_SEGMENTO = { ativa: 'Ativa', reserva: 'Reserva' };
+import { esc, formatar, NOME_SEGMENTO } from './formato.js';
 
 let ranking = [];        // linhas de ranking()
 let medias = [];         // linhas de medias_turma()

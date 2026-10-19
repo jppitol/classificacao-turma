@@ -11,7 +11,44 @@
   <p class="carregando" id="carregando">Carregando...</p>
   <main class="pagina" id="conteudo" hidden>
     <h1>Engenharias</h1>
-    <p class="vazio">Em construção.</p>
+
+    <section class="cartao secao">
+      <h2 class="cartao-titulo">Minha situação</h2>
+      <div id="situacao"></div>
+      <p class="dica regra">Na ordem da classificação, cada um fica com a primeira opção que ainda tem vaga.</p>
+    </section>
+
+    <section class="cartao secao">
+      <h2 class="cartao-titulo">Minhas preferências</h2>
+      <div id="aviso-sem-lista" class="aviso" hidden>Você ainda não salvou suas preferências.</div>
+      <ol class="lista-pref" id="lista-pref"></ol>
+      <div class="barra-salvar">
+        <span id="estado-lista" class="dica" style="margin:0" aria-live="polite"></span>
+        <button type="button" class="botao" id="salvar">Salvar</button>
+      </div>
+    </section>
+
+    <section class="secao">
+      <h2 class="cartao-titulo">Vagas e cortes</h2>
+      <div class="abas" id="abas-segmento" role="tablist">
+        <button type="button" role="tab" data-segmento="ativa">Ativa</button>
+        <button type="button" role="tab" data-segmento="reserva">Reserva</button>
+      </div>
+      <p class="dica" id="aviso-reserva" hidden>Na reserva, as vagas são o que sobra da sala depois da ativa, então mudam conforme a ativa escolhe.</p>
+      <div class="tabela-rolagem">
+        <table class="tabela-ranking">
+          <thead>
+            <tr><th>Engenharia</th><th class="num">Vagas</th><th class="num">Ocupadas</th><th class="num">Corte</th></tr>
+          </thead>
+          <tbody id="linhas-vagas"></tbody>
+        </table>
+      </div>
+      <p class="dica fonte">Vagas de referência: DIEx nº 326-A1/GPG/DCT, de 15 JAN 26 (turma anterior)</p>
+
+      <h3 class="subtitulo">Turmas</h3>
+      <p class="dica" style="margin:0 0 0.5rem">Toque numa engenharia para ver quem está na vaga e quem está na fila de espera.</p>
+      <div id="turmas"></div>
+    </section>
   </main>
 </body>
 </html>

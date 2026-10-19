@@ -42,7 +42,8 @@ O usuário logado só enxerga os próprios dados nas tabelas; tudo que envolve a
 | `avaliacoes` | id, disciplina_id, nome, peso, ordem | leitura |
 | `notas` | aluno_id, avaliacao_id, valor (0 a 10), atualizado_em | só as próprias: select/insert/update/delete |
 | `engenharias` | sigla, nome | leitura |
-| `vagas` | turma_id, segmento, engenharia, quantidade | leitura |
+| `vagas` | turma_id, segmento, engenharia, quantidade | leitura (só linhas da ativa; a reserva é calculada) |
+| `capacidades` | turma_id, engenharia, capacidade, cg, ofa, ona, destrancamento | leitura |
 | `preferencias` | aluno_id, engenharia, ordem | só as próprias (para gravar use a RPC) |
 
 Disciplina com `peso = 0` ou avaliação com `peso = 0` (TAF do 1º semestre, Abdominal) é lançada mas não conta: mostre com a etiqueta "não conta na média".
@@ -58,12 +59,22 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 | `meu_desempenho` | disciplina com nota minha: semestre, disciplina_id, disciplina, componente, minha_media, media_turma, diferenca, minha_posicao, alunos_com_nota |
 | `estatisticas_avaliacoes` | avaliação com alguma nota na turma: avaliacao_id, minha_nota, media, desvio, minima, maxima, alunos, minha_posicao |
 | `distribuicao` | aluno: segmento, ordem_classificacao, nome, engenharia (null = sem vaga nas opções), opcao, sou_eu |
-| `resumo_engenharias` | (segmento, engenharia): vagas, ocupadas, ncf_corte (NCF do último que entrou) |
+| `resumo_engenharias` | (segmento, engenharia): vagas (na reserva, o que sobrou da sala), ocupadas, ncf_corte (NCF do último que entrou) |
 | `minha_engenharia` | minha opção, em ordem: opcao, engenharia, situacao ('na vaga' / 'espera' / 'abaixo'), posicao_espera, ncf_corte, meu_ncf, falta |
+| `filas_espera` | (segmento, engenharia, aluno esperando): posicao na fila, ordem_classificacao, nome, opcao (que opção essa engenharia é para ele), sou_eu |
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
 
 `pendencias` = quantas avaliações já feitas pela turma o aluno ainda não lançou. Mostrar como aviso
 ("faltam 3 notas") porque nota não lançada conta como zero no NCF.
+
+Vagas das engenharias (supabase/08_vagas_capacidade.sql):
+- **Ativa:** vagas fixas por engenharia, na tabela `vagas`.
+- **Reserva:** fica com o que sobra da sala: `capacidade - cg - ofa - ona - destrancamento - alunos da ativa
+  que ficaram naquela engenharia` (tabela `capacidades`). Por isso as vagas da reserva mudam conforme a ativa escolhe.
+- A distribuição roda a ativa inteira primeiro e depois a reserva. Na ordem da classificação, cada aluno
+  fica com a primeira opção que ainda tem vaga.
+- Números de referência: DIEx nº 326-A1/GPG/DCT, de 15 JAN 26 (turma anterior). Trocar pelos da turma
+  quando sair o DIEx dela (Table Editor > vagas / capacidades).
 
 NCF igual ao da planilha: MG e MM dividem pelo peso de **todas** as avaliações do curso, então o que
 ainda não aconteceu conta como zero (supabase/07_ncf_como_planilha.sql).
@@ -88,8 +99,9 @@ ainda não aconteceu conta como zero (supabase/07_ncf_como_planilha.sql).
    barra de diferença, verde acima / vermelho abaixo), posição na disciplina; detalhe por avaliação.
 5. **Engenharias:** editar a lista de 10 preferências (botões subir/descer, funciona no celular);
    "minha situação" (em qual entro hoje, em qual fila de espera estou e quanto falta de NCF);
-   tabela de vagas e notas de corte; distribuição completa.
-6. **Perfil:** nome de guerra, segmento, sair. (Não existe opção de ocultar o nome: o ranking mostra todos, como na planilha.)
+   tabela de vagas e notas de corte; "Turmas" como na planilha: um bloco por engenharia com
+   quem está na vaga e quem está na fila de espera (`distribuicao` + `filas_espera`).
+6. **Perfil:** nome de guerra, segmento, email, trocar a senha, sair.
 
 ## Estrutura sugerida de `web/`
 ```
