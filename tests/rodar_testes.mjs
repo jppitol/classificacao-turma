@@ -350,5 +350,33 @@ console.log('11. Média de cada disciplina do 1º semestre = coluna de média da
   console.log(`   ${n} médias conferidas, erro máximo ${maxErr.toExponential(2)}`);
 }
 
+// ---------------------------------------------------------------- 12
+console.log('12. Minhas pendências = o número "pendencias" do ranking');
+{
+  const db = await novoBanco();
+  // aluno com mais pendências (para a lista ter vários itens)
+  const aluno = (await db.query(`select aluno_id from privado.classificacao order by pendencias desc, aluno_id limit 1`)).rows[0].aluno_id;
+  const uid = (await db.query(`insert into auth.users (email) values ('pend@ime.eb.br') returning id`)).rows[0].id;
+  await db.query(`update alunos set user_id = $1 where id = $2`, [uid, aluno]);
+  await comoUsuario(db, uid, async () => {
+    const lista = (await db.query(`select * from minhas_pendencias()`)).rows;
+    const meu = (await db.query(`select pendencias from ranking() where sou_eu`)).rows[0];
+    check(lista.length > 1 && lista.length === Number(meu.pendencias), `lista com ${lista.length} = pendencias do ranking (${meu.pendencias})`);
+    check(new Set(lista.map((x) => x.avaliacao_id)).size === lista.length, 'sem avaliação repetida');
+    const minhas = new Set((await db.query(`select avaliacao_id from notas`)).rows.map((x) => x.avaliacao_id));
+    check(lista.every((x) => !minhas.has(x.avaliacao_id)), 'nenhuma pendência que eu já lancei');
+    check(lista.every((x, i) => i === 0 || lista[i - 1].semestre <= x.semestre), 'ordenada por semestre');
+    // lançando a primeira, ela sai da lista e o ranking conta uma a menos
+    await db.query(`insert into notas values ($1, $2, 7)`, [aluno, lista[0].avaliacao_id]);
+    const depois = (await db.query(`select * from minhas_pendencias()`)).rows;
+    const meuDepois = (await db.query(`select pendencias from ranking() where sou_eu`)).rows[0];
+    check(depois.length === lista.length - 1 && !depois.some((x) => x.avaliacao_id === lista[0].avaliacao_id)
+          && Number(meuDepois.pendencias) === depois.length, 'lançar uma tira ela da lista');
+  });
+  await db.exec(`set role anon`);
+  check(/permission denied/.test(await erro(db.query(`select * from minhas_pendencias()`)) ?? ''), 'anon não chama minhas_pendencias');
+  await db.exec(`reset role`);
+}
+
 console.log(`\n${ok} verificações ok, ${falhas} falhas`);
 process.exit(falhas ? 1 : 0);

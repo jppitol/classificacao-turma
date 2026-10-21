@@ -58,3 +58,12 @@ export function estiloCor(nomeDisciplina) {
   const cor = COR_POR_DISCIPLINA.get(nomeDisciplina);
   return cor ? ` style="--cor: ${cor}"` : '';
 }
+
+// Lista de notas que faltam (de minhas_pendencias), cada uma é um link que abre Minhas notas
+// direto no campo dela (notas.html#av-123). Mostra as primeiras e "e mais N".
+export function htmlPendencias(lista, limite = 6) {
+  const itens = lista.slice(0, limite).map((p) =>
+    `<li><a href="notas.html#av-${p.avaliacao_id}">${ROTULO_SEMESTRE[p.semestre]} · ${esc(p.disciplina)} · ${esc(p.avaliacao)}</a></li>`).join('');
+  const resto = lista.length > limite ? `<li class="dica" style="margin:0">e mais ${lista.length - limite}</li>` : '';
+  return `<ul class="lista-pendencias">${itens}${resto}</ul>`;
+}

@@ -2,15 +2,16 @@
 // Todos os números vêm prontos do banco (RPCs ranking e medias_turma).
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, NOME_SEGMENTO } from './formato.js';
+import { esc, formatar, NOME_SEGMENTO, htmlPendencias } from './formato.js';
 
 let ranking = [];        // linhas de ranking()
 let medias = [];         // linhas de medias_turma()
 
 async function montarPagina(aluno) {
-  const [respRanking, respMedias] = await Promise.all([
+  const [respRanking, respMedias, respPendencias] = await Promise.all([
     supabase.rpc('ranking'),
     supabase.rpc('medias_turma'),
+    supabase.rpc('minhas_pendencias'),
   ]);
   if (respRanking.error || respMedias.error) {
     console.error(respRanking.error || respMedias.error);
@@ -21,7 +22,8 @@ async function montarPagina(aluno) {
   ranking = respRanking.data;
   medias = respMedias.data;
 
-  mostrarAvisoPendencias();
+  if (respPendencias.error) console.error(respPendencias.error);   // sem a lista, o aviso só não mostra os links
+  mostrarAvisoPendencias(respPendencias.data ?? []);
 
   document.getElementById('abas-segmento').addEventListener('click', (evento) => {
     const botao = evento.target.closest('[data-segmento]');
@@ -86,12 +88,14 @@ function desenharMedias(segmento) {
 }
 
 // Aviso em cima se EU tenho notas faltando (nota não lançada conta como zero no NCF)
-function mostrarAvisoPendencias() {
+// Cada nota que falta vira um link direto para o campo dela em Minhas notas.
+function mostrarAvisoPendencias(pendencias) {
   const eu = ranking.find((r) => r.sou_eu);
   if (!eu || eu.pendencias === 0) return;
   const aviso = document.getElementById('aviso-pendencias');
   const texto = eu.pendencias === 1 ? 'Falta 1 nota sua' : `Faltam ${eu.pendencias} notas suas`;
-  aviso.innerHTML = `${texto} em avaliações que a turma já fez. Enquanto não lançar, elas contam como zero no seu NCF. <a href="notas.html">Lançar notas</a>`;
+  aviso.innerHTML = `${texto} em avaliações que a turma já fez. Enquanto não lançar, elas contam como zero no seu NCF.
+    ${pendencias.length ? `Toque para lançar: ${htmlPendencias(pendencias)}` : '<a href="notas.html">Lançar notas</a>'}`;
   aviso.hidden = false;
 }
 

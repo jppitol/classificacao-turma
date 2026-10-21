@@ -546,3 +546,29 @@ select:focus { outline: 2px solid var(--destaque); outline-offset: 1px; }
 .lancamento label { margin-bottom: 0.7rem; font-size: 0.9rem; }
 .lancamento input[aria-invalid="true"] { border-color: var(--erro); outline-color: var(--erro); }
 .lancamento-status { margin: 0.5rem 0 0; min-height: 1.2em; font-size: 0.9rem; }
+
+/* ---------- Notas que faltam (Ranking e Minhas notas) ---------- */
+.lista-pendencias { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.lista-pendencias a {
+  display: inline-block;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: var(--superficie);
+  border: 1px solid var(--destaque);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.lista-pendencias li.dica { align-self: center; }
+/* campo que falta lançar: marquinha "falta" ao lado do nome */
+.avaliacao.pendente label::after {
+  content: "falta";
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--erro-fundo);
+  color: var(--erro);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.avaliacao.piscar { animation: piscar-linha 1.6s ease-out; }
+@keyframes piscar-linha { 0%, 35% { background: var(--destaque-suave); } }

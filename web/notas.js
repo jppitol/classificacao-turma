@@ -1,7 +1,7 @@
 // Página "Minhas notas": lançar, corrigir e apagar as próprias notas.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO, estiloCor } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO, estiloCor, htmlPendencias } from './formato.js';
 
 // ---------- Formatação ----------
 
@@ -22,6 +22,8 @@ function lerNota(texto) {
 // ---------- Montagem da página ----------
 
 async function montarPagina() {
+  // Veio de um link de pendência (notas.html#av-123)? Lê agora, antes das abas trocarem o endereço
+  const alvo = location.hash.match(/^#av-(\d+)$/)?.[1];
   // Estrutura e minhas notas (o RLS já filtra: só a minha turma e só as minhas notas)
   const [semestres, disciplinas, avaliacoes, notas] = await Promise.all([
     supabase.from('semestres').select('id, numero, peso').order('numero'),
@@ -98,7 +100,48 @@ async function montarPagina() {
     if (evento.target.matches('input[data-avaliacao]')) salvar(evento.target);
   });
 
+  // Link de pendência (#av-123), vindo do Ranking ou do aviso desta página: vai direto ao campo
+  window.addEventListener('hashchange', irParaHash);
+
   await atualizarMedias();
+  if (alvo) irParaAvaliacao(alvo);
+}
+
+function irParaHash() {
+  const id = location.hash.match(/^#av-(\d+)$/)?.[1];
+  if (id) irParaAvaliacao(id);
+}
+
+// Abre o semestre da avaliação, rola até o campo, foca (já abre o teclado no celular),
+// pisca a linha e deixa o lançamento rápido apontando para ela.
+function irParaAvaliacao(id) {
+  const campo = document.getElementById(`av-${id}`);
+  if (!campo) return;
+  abrirSemestre(campo.closest('[data-painel-semestre]').dataset.painelSemestre);
+  const linha = campo.closest('.avaliacao');
+  linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  campo.focus({ preventScroll: true });
+  linha.classList.remove('piscar');
+  void linha.offsetWidth;
+  linha.classList.add('piscar');
+
+  const aval = estrutura.avaliacoes.find((a) => String(a.id) === String(id));
+  lanc.disciplina.value = String(aval.disciplina_id);
+  preencherAvaliacoes(String(id));
+}
+
+// Aviso "faltam N notas" no topo, com links, e marca os campos que faltam
+function mostrarPendencias(lista) {
+  const aviso = document.getElementById('aviso-pendencias');
+  aviso.hidden = lista.length === 0;
+  aviso.innerHTML = lista.length
+    ? `${lista.length === 1 ? 'Falta 1 nota' : `Faltam ${lista.length} notas`} em avaliações que a turma já fez
+       (contam como zero até você lançar). Toque para ir até ela: ${htmlPendencias(lista)}`
+    : '';
+  const faltam = new Set(lista.map((p) => String(p.avaliacao_id)));
+  for (const campo of document.querySelectorAll('input[data-avaliacao]')) {
+    campo.closest('.avaliacao').classList.toggle('pendente', faltam.has(campo.dataset.avaliacao));
+  }
 }
 
 function htmlDisciplina(disciplina, avaliacoes, minhaNota) {
@@ -235,11 +278,14 @@ let pedido = 0;
 let feitas = new Set();   // avaliações que alguém da turma já lançou (para a prévia contar zero nelas)
 async function atualizarMedias() {
   const meu = ++pedido;
-  const [desempenho, estatisticas] = await Promise.all([
+  const [desempenho, estatisticas, pendencias] = await Promise.all([
     supabase.rpc('meu_desempenho'),
     supabase.rpc('estatisticas_avaliacoes'),
+    supabase.rpc('minhas_pendencias'),
   ]);
   if (meu !== pedido) return;
+  if (pendencias.error) console.error(pendencias.error);
+  else mostrarPendencias(pendencias.data);
   if (desempenho.error || estatisticas.error) {
     console.error(desempenho.error || estatisticas.error);
     return;

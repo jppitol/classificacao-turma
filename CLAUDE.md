@@ -62,6 +62,7 @@ Apagar (campo esvaziado): `delete().match({ aluno_id, avaliacao_id })`. O `aluno
 | `resumo_engenharias` | (segmento, engenharia): vagas (na reserva, o que sobrou da sala), ocupadas, ncf_corte (NCF do último que entrou) |
 | `minha_engenharia` | minha opção, em ordem: opcao, engenharia, situacao ('na vaga' / 'espera' / 'abaixo'), posicao_espera, ncf_corte, meu_ncf, falta |
 | `filas_espera` | (segmento, engenharia, aluno esperando): posicao na fila, ordem_classificacao, nome, opcao (que opção essa engenharia é para ele), sou_eu |
+| `minhas_pendencias` | avaliação que a turma já fez e eu não lancei: avaliacao_id, semestre, disciplina, avaliacao (mesmo total que `pendencias`; links `notas.html#av-<id>` abrem o campo) |
 | `salvar_preferencias({ lista: ['COMP','ELO',...] })` | grava a lista inteira de uma vez (atômico) |
 
 Média da disciplina (supabase/11_media_disciplina_com_zero.sql): avaliação que alguém da turma já lançou e o
