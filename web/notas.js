@@ -1,7 +1,7 @@
 // Página "Minhas notas": lançar, corrigir e apagar as próprias notas.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO, estiloCor } from './formato.js';
 
 // ---------- Formatação ----------
 
@@ -37,6 +37,7 @@ async function montarPagina() {
     return;
   }
 
+  estrutura = { semestres: semestres.data, disciplinas: disciplinas.data, avaliacoes: avaliacoes.data };
   const minhaNota = new Map(notas.data.map((n) => [n.avaliacao_id, n.valor]));
   const abas = document.getElementById('abas-semestre');
   const container = document.getElementById('semestres');
@@ -69,6 +70,7 @@ async function montarPagina() {
   const comNota = semestres.data.filter((s) =>
     container.querySelector(`[data-painel-semestre="${s.id}"] input[value]:not([value=""])`));
   const inicial = doEndereco || comNota.at(-1) || semestres.data[0];
+  montarLancamento();
   if (inicial) abrirSemestre(inicial.id);
 
   // Prévia enquanto digita e gravação ao sair do campo
@@ -119,7 +121,7 @@ function htmlDisciplina(disciplina, avaliacoes, minhaNota) {
   }).join('');
 
   return `
-    <article class="disciplina" data-disciplina="${disciplina.id}">
+    <article class="disciplina" data-disciplina="${disciplina.id}"${estiloCor(disciplina.nome)}>
       <header class="disciplina-topo">
         <h3>${esc(disciplina.nome)}</h3>${naoConta}
       </header>
@@ -140,6 +142,88 @@ function abrirSemestre(id) {
   }
   for (const painel of document.querySelectorAll('[data-painel-semestre]')) {
     painel.hidden = painel.dataset.painelSemestre !== id;
+  }
+  // o lançamento rápido acompanha a aba aberta
+  if (lanc.semestre.value !== id) { lanc.semestre.value = id; preencherDisciplinas(); }
+}
+
+// ---------- Lançamento rápido (dropdowns no topo) ----------
+// Escolhe semestre > disciplina > avaliação e digita a nota. Salvar usa o mesmo caminho dos
+// campos da página (salvar), então validação, "Salvo" e médias funcionam igual.
+
+let estrutura = { semestres: [], disciplinas: [], avaliacoes: [] };
+let lanc = null;   // campos do formulário: lanc.semestre, lanc.disciplina, lanc.avaliacao, lanc.nota
+
+function montarLancamento() {
+  const form = document.getElementById('lancamento');
+  const campo = (nome) => form.querySelector(`[name="${nome}"]`);
+  lanc = { semestre: campo('semestre'), disciplina: campo('disciplina'), avaliacao: campo('avaliacao'), nota: campo('nota') };
+  lanc.semestre.innerHTML = estrutura.semestres
+    .map((s) => `<option value="${s.id}">${ROTULO_SEMESTRE[s.numero]}</option>`).join('');
+  lanc.semestre.addEventListener('change', preencherDisciplinas);
+  lanc.disciplina.addEventListener('change', preencherAvaliacoes);
+  lanc.avaliacao.addEventListener('change', preencherNota);
+  form.addEventListener('submit', (evento) => { evento.preventDefault(); salvarLancamento(); });
+  preencherDisciplinas();
+}
+
+function preencherDisciplinas() {
+  const doSemestre = estrutura.disciplinas.filter((d) => String(d.semestre_id) === lanc.semestre.value);
+  lanc.disciplina.innerHTML = [['graduacao', 'Graduação'], ['militar', 'Militar']].map(([componente, titulo]) => {
+    const lista = doSemestre.filter((d) => d.componente === componente);
+    return lista.length
+      ? `<optgroup label="${titulo}">${lista.map((d) => `<option value="${d.id}">${esc(d.nome)}</option>`).join('')}</optgroup>`
+      : '';
+  }).join('');
+  preencherAvaliacoes();
+}
+
+// Cada opção mostra a nota que já está salva: "VE 1 · 8,5" ou "VE 1 · não lançada"
+function preencherAvaliacoes(manterId) {
+  const dela = estrutura.avaliacoes.filter((a) => String(a.disciplina_id) === lanc.disciplina.value);
+  lanc.avaliacao.innerHTML = dela.map((a) => {
+    const salvo = document.getElementById(`av-${a.id}`)?.dataset.salvo;
+    return `<option value="${a.id}">${esc(a.nome)} · ${salvo ? salvo : 'não lançada'}</option>`;
+  }).join('');
+  if (typeof manterId === 'string' && dela.some((a) => String(a.id) === manterId)) lanc.avaliacao.value = manterId;
+  preencherNota();
+}
+
+function preencherNota() {
+  lanc.nota.value = document.getElementById(`av-${lanc.avaliacao.value}`)?.dataset.salvo ?? '';
+  lanc.nota.removeAttribute('aria-invalid');
+}
+
+async function salvarLancamento() {
+  const status = document.getElementById('lancamento-status');
+  const campo = document.getElementById(`av-${lanc.avaliacao.value}`);
+  if (!campo) return;
+  if (Number.isNaN(lerNota(lanc.nota.value))) {
+    lanc.nota.setAttribute('aria-invalid', 'true');
+    mostrarStatus(status, 'Nota de 0 a 10', 'erro');
+    return;
+  }
+  lanc.nota.removeAttribute('aria-invalid');
+
+  const disciplina = lanc.disciplina.selectedOptions[0].textContent;
+  const avaliacao = estrutura.avaliacoes.find((a) => String(a.id) === lanc.avaliacao.value).nome;
+  campo.value = lanc.nota.value;           // escreve no campo da página e salva por ele
+  mostrarStatus(status, 'Salvando...');
+  const resultado = await salvar(campo);
+  const textos = {
+    salvo: [`Salvo: ${disciplina} · ${avaliacao} = ${campo.dataset.salvo}`, 'sucesso'],
+    apagado: [`Apagado: ${disciplina} · ${avaliacao}`, 'sucesso'],
+    igual: [`${disciplina} · ${avaliacao} já estava assim`, ''],
+    erro: ['Erro ao salvar, tente de novo', 'erro'],
+  };
+  mostrarStatus(status, ...(textos[resultado] ?? ['', '']));
+
+  // depois de salvar, já deixa a próxima avaliação da disciplina selecionada
+  if (resultado === 'salvo' || resultado === 'apagado' || resultado === 'igual') {
+    const proxima = lanc.avaliacao.selectedOptions[0].nextElementSibling;
+    preencherAvaliacoes(proxima ? proxima.value : lanc.avaliacao.value);
+    lanc.nota.focus();
+    lanc.nota.select();
   }
 }
 
@@ -206,6 +290,7 @@ function mostrarPrevia(campoDigitado) {
 
 // ---------- Gravar / apagar ----------
 
+// Devolve 'salvo', 'apagado', 'igual', 'invalido' ou 'erro' (o lançamento rápido mostra isso)
 async function salvar(campo) {
   const status = campo.closest('.avaliacao').querySelector('.status');
   const valor = lerNota(campo.value);
@@ -213,7 +298,7 @@ async function salvar(campo) {
   if (Number.isNaN(valor)) {
     campo.setAttribute('aria-invalid', 'true');
     mostrarStatus(status, 'Nota de 0 a 10', 'erro');
-    return;
+    return 'invalido';
   }
   campo.removeAttribute('aria-invalid');
 
@@ -223,7 +308,7 @@ async function salvar(campo) {
     campo.value = campo.dataset.salvo;
     mostrarStatus(status, '');
     atualizarMedias();
-    return;
+    return 'igual';
   }
 
   mostrarStatus(status, 'Salvando...');
@@ -235,13 +320,18 @@ async function salvar(campo) {
   if (error) {
     console.error(error);
     mostrarStatus(status, 'Erro ao salvar, tente de novo', 'erro');
-    return;
+    return 'erro';
   }
   campo.dataset.salvo = valor == null ? '' : formatarCampo(valor);
   campo.value = campo.dataset.salvo;
   mostrarBotaoApagar(campo);
   mostrarStatus(status, valor == null ? 'Apagado' : 'Salvo', 'sucesso');
   atualizarMedias();
+  // se a nota foi mudada direto no campo, o lançamento rápido também mostra o valor novo
+  if (estrutura.avaliacoes.some((a) => String(a.id) === campo.dataset.avaliacao && String(a.disciplina_id) === lanc.disciplina.value)) {
+    preencherAvaliacoes(lanc.avaliacao.value);
+  }
+  return valor == null ? 'apagado' : 'salvo';
 }
 
 // O "×" só aparece quando o campo tem alguma coisa

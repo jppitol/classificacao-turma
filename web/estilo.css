@@ -510,3 +510,39 @@ button { font: inherit; cursor: pointer; }
 }
 .botao-tema:hover { color: var(--destaque); border-color: var(--destaque); }
 .canto-tema { position: fixed; top: 0.75rem; right: 0.75rem; }
+
+/* ---------- Cores das disciplinas (como na planilha) ---------- */
+/* faixa colorida à esquerda e cabeçalho levemente pintado; funciona no claro e no escuro */
+.disciplina[style*="--cor"] { border-left: 6px solid var(--cor); }
+.disciplina[style*="--cor"] .disciplina-topo {
+  margin: -1rem -1rem 0.6rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0 var(--raio) 0 0;
+  background: color-mix(in srgb, var(--cor) 32%, var(--superficie));
+}
+.desempenho[style*="--cor"] .disc-titulo {
+  margin: -0.9rem -1rem 0.4rem;
+  padding: 0.6rem 1rem;
+  border-radius: 0 var(--raio) 0 0;
+  background: color-mix(in srgb, var(--cor) 32%, var(--superficie));
+}
+
+/* ---------- Lançamento rápido (Minhas notas) ---------- */
+select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.65rem 0.6rem;
+  font: inherit;
+  color: var(--texto);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+select:focus { outline: 2px solid var(--destaque); outline-offset: 1px; }
+.lancamento { margin-bottom: 1rem; }
+.lancamento-linha { display: grid; grid-template-columns: 6rem 1fr; gap: 0.6rem; }
+.lancamento-linha + .lancamento-linha { grid-template-columns: 1fr 6rem; }
+.lancamento label { margin-bottom: 0.7rem; font-size: 0.9rem; }
+.lancamento input[aria-invalid="true"] { border-color: var(--erro); outline-color: var(--erro); }
+.lancamento-status { margin: 0.5rem 0 0; min-height: 1.2em; font-size: 0.9rem; }

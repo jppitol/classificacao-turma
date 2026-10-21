@@ -34,3 +34,27 @@ export function traduzirErro(error) {
   };
   return traducoes[error.code] || error.message;
 }
+
+// Cor de cada disciplina, igual aos cabeçalhos da planilha (a cor segue a "posição" da
+// disciplina no semestre: Física, Cálculo, Álgebra/Mecânica...). Só aparência, não vai pro banco.
+const CORES_PLANILHA = {
+  '#A2C4C9': ['Física I', 'Física II', 'Física III', 'Física IV'],
+  '#93C47D': ['Cálculo I', 'Cálculo II', 'Cálculo III', 'Cálculo IV'],
+  '#8E7CC3': ['Álgebra Linear I', 'Álgebra Linear II', 'Mecânica I', 'Mecânica II'],
+  '#E69138': ['IC', 'Desenho Técnico', 'ICM', 'Resistência dos Materiais'],
+  '#EA9999': ['Química I', 'Química II', 'Eletricidade Técnica', 'Cálculo Numérico'],
+  '#D5A6BD': ['Probabilidade'],
+  '#4A86E8': ['Laboratório de Física I', 'Laboratório de Física II', 'IPE I', 'IPE II',
+              'TAF II', 'TAF III', 'TAF IV'],
+  '#6AA84F': ['Laboratório de Química I', 'Laboratório de Química II',
+              'Laboratório de Física III', 'Laboratório de Física IV'],
+  '#9FC5E8': ['Instrução Militar I', 'Instrução Militar II', 'Instrução Militar III', 'Instrução Militar IV', 'TAF I'],
+};
+const COR_POR_DISCIPLINA = new Map(
+  Object.entries(CORES_PLANILHA).flatMap(([cor, nomes]) => nomes.map((nome) => [nome, cor])));
+
+// style="--cor: #..." para pôr no cartão da disciplina (vazio se a disciplina não estiver na lista)
+export function estiloCor(nomeDisciplina) {
+  const cor = COR_POR_DISCIPLINA.get(nomeDisciplina);
+  return cor ? ` style="--cor: ${cor}"` : '';
+}

@@ -3,7 +3,7 @@
 // estatisticas_avaliacoes). O JavaScript só escolhe o tamanho das barras.
 import { supabase } from './supabase.js';
 import { iniciarPagina } from './layout.js';
-import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO } from './formato.js';
+import { esc, formatar, ROTULO_SEMESTRE, NOME_SEGMENTO, estiloCor } from './formato.js';
 
 const NOTA_EXPLICATIVA = `<p class="dica nota-explicativa">Como na planilha, a média de cada disciplina conta zero
   nas avaliações que a turma já fez e você não lançou. As que ninguém fez ainda ficam de fora.</p>`;
@@ -176,7 +176,7 @@ function htmlDisciplina(disciplina, d, avaliacoes, porAvaliacao, maior) {
     : '<span class="disc-numeros">Sem nota sua ainda</span>';
 
   return `
-    <article class="disciplina desempenho">
+    <article class="disciplina desempenho"${estiloCor(disciplina.nome)}>
       <button type="button" class="disc-botao" aria-expanded="false" aria-controls="det-${disciplina.id}">
         <span class="disc-titulo"><span class="disc-nome">${esc(disciplina.nome)}</span>${etiqueta}<span class="seta" aria-hidden="true">▾</span></span>
         ${meio}
